@@ -1,6 +1,6 @@
 $ cat .gitignore
 
-winAPItest/Debug/*.log*
+winAPI/Debug/
 Debug/
 .vs/
 *.sln
