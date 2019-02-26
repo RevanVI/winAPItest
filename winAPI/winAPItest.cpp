@@ -5,6 +5,7 @@
 #include "winAPItest.h"
 #include <windowsx.h>
 #include <cmath>
+#include "helpFunc.h"
 
 #define ID_EDIT 1000
 #define ID_LIST 2000
@@ -28,31 +29,7 @@ BOOL CALLBACK CountWndProc(HWND hwnd, LPARAM lParam);
 int AmountWindows();
 int count = 0;
 
-bool drawLine(HDC hdc, int x0, int y0, int x, int y)
-{
-	POINT pt;
-	MoveToEx(hdc, x0, y0, &pt);
-	return LineTo(hdc, x, y);
-}
 
-bool drawBrickDim(HDC hdc, int x, int y, int w, int h, int d, COLORREF color)
-{
-	int ** arr = new int*[7];
-	for (int i = 0; i < 7; ++i)
-		arr[i] = new int[4];
-
-	for (int i = 0; i < 7; ++i)
-	{
-		for (int j = 0; j < 4; ++j)
-		{
-			if (j == 3)
-				arr[i][j] = 1;
-			else if (i > 2 && j == ) //передний план
-				arr[i][j] += 
-		}
-	}
-
-}
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
@@ -131,8 +108,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	GetWindowRect(hWnd, &rcWnd);
 	GetClientRect(hWnd, &rcWorkArea);
 	static int xClient, yClient;
-	//xClient = rcWnd.left;
-	//yClient = rcWnd.bottom - rcWorkArea.bottom;
 
 	GetClientRect(hWnd, &rcWorkArea);
 	static int width = rcWorkArea.right;
@@ -175,96 +150,12 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				y0 = yc,
 				x = xc + 0.5 * (r - l) * cos(2 * 3.14 * 0.25),
 				y = yc - 0.5 * (b - t) * sin(2 * 3.14 * 0.25);
-			drawLine(hdc, xc, yc, x0, y0);
-			HBRUSH newBr = CreateSolidBrush(RGB(255, 0, 0));
-			HBRUSH  oldBr = (HBRUSH)SelectObject(hdc, newBr);
-			Pie(hdc, l, t, r, b, x0, y0, x, y);
-			x0 = x;
-			y0 = y;
-			x = xc + 0.4 * xClient * cos(2 * 3.14 * 0.125);
-			y = yc - 0.4 * yClient * sin(2 * 3.14 * 0.125);
-			TextOut(hdc, x, y, L"25%", 3);
 
-			x = xc + 0.5 * (r - l) * cos(2 * 3.14 * 0.90);
-			y = yc - 0.5 * (b - t) * sin(2 * 3.14 * 0.90);
-			drawLine(hdc, xc, yc, x0, y0);
-			newBr = CreateSolidBrush(RGB(0, 255, 0));
-			SelectObject(hdc, newBr);
-			Pie(hdc, l, t, r, b, x0, y0, x, y);
-			x0 = x;
-			y0 = y;
-			x = xc + 0.4 * xClient * cos(2 * 3.14 * 0.575);
-			y = yc - 0.4 * yClient * sin(2 * 3.14 * 0.575);
-			TextOut(hdc, x, y, L"65%", 3);
-
-			x = xc + 0.5 * (r - l) * cos(2 * 3.14 * 1);
-			y = yc - 0.5 * (b - t) * sin(2 * 3.14 * 1);
-			drawLine(hdc, xc, yc, x0, y0);
-			newBr = CreateSolidBrush(RGB(0, 0, 255));
-			SelectObject(hdc, newBr);
-			Pie(hdc, l, t, r, b, x0, y0, x, y);
-			x = xc + 0.4 * xClient * cos(2 * 3.14 * 0.95);
-			y = yc - 0.4 * yClient * sin(2 * 3.14 * 0.95);
-			TextOut(hdc, x, y, L"10%", 3);
-
-			SelectObject(hdc, oldBr);
-			DeleteObject(newBr);
-			/*
-			LOGFONT lf;
-			lf.lfHeight = curH;
-			lf.lfWidth = curW;
-			lf.lfCharSet = DEFAULT_CHARSET;
-			lf.lfPitchAndFamily = DEFAULT_PITCH;
-			lf.lfItalic = 0;
-			lf.lfStrikeOut = 0;
-			lf.lfWeight = FW_NORMAL;
-			lf.lfEscapement = 0;
-			lf.lfOrientation = 0;
-			HFONT oldFont, nFont;
-			nFont = CreateFontIndirect(&lf);
-			oldFont = (HFONT)SelectObject(hdc, nFont);
-			SelectObject(hdc, oldFont);
-			DeleteObject(nFont);
-			*/
 			EndPaint(hWnd, &ps);
 		}
 		break;
 	case WM_SIZE:
 	{
-		/*
-		GetClientRect(hWnd, &rcWorkArea);
-		width = rcWorkArea.right - 40;
-		height = rcWorkArea.bottom - 40;
-		int oldH = curH;
-		if (height / curStr > curH)
-		{
-			if (height / curStr < defH)
-			{
-				curStr = defStr;
-				curH = height / curStr;
-			}
-			else
-			{
-				curH = defH;
-				curStr = height / curH;
-			}
-		}
-		else
-		{
-			int posStr = height / defH;
-			if (posStr < defStr)
-			{
-				curStr = defStr;
-				curH = height / curStr;
-			}
-			else
-				curStr = height / defH;
-		}
-		if (width / charNum < defW)
-			curW = width / 8;
-		else
-			curW = (double(curH) / defH) * defW;
-		*/
 		xClient = LOWORD(lParam);
 		yClient = HIWORD(lParam);
 	}
