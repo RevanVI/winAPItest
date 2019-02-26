@@ -4,5 +4,5 @@ winAPI/Debug/
 Debug/
 .vs/
 *.sln
-winAPItest/*.vcxproj*
-winAPItest.VC.DB
+winAPI/*.vcxproj*
+winAPItest.VC.db
