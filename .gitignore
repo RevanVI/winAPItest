@@ -1,0 +1,7 @@
+$ cat .gitignore
+
+winAPItest/Debug/
+Debug/
+.vs/
+*.sln
+winAPItest/*.vcxproj*

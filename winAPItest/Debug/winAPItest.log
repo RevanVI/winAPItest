@@ -1,0 +1,17 @@
+﻿  winAPItest.cpp
+e:\projects\winapitest\winapitest\winapitest.cpp(35): warning C4800: BOOL: принудительно задано логическое значение "true" или "false" (предупреждение о производительности)
+e:\projects\winapitest\winapitest\winapitest.cpp(156): warning C4244: инициализация: преобразование "double" в "int", возможна потеря данных
+e:\projects\winapitest\winapitest\winapitest.cpp(158): warning C4244: инициализация: преобразование "double" в "int", возможна потеря данных
+e:\projects\winapitest\winapitest\winapitest.cpp(159): warning C4244: инициализация: преобразование "double" в "int", возможна потеря данных
+e:\projects\winapitest\winapitest\winapitest.cpp(166): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+e:\projects\winapitest\winapitest\winapitest.cpp(167): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+e:\projects\winapitest\winapitest\winapitest.cpp(170): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+e:\projects\winapitest\winapitest\winapitest.cpp(171): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+e:\projects\winapitest\winapitest\winapitest.cpp(178): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+e:\projects\winapitest\winapitest\winapitest.cpp(179): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+e:\projects\winapitest\winapitest\winapitest.cpp(182): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+e:\projects\winapitest\winapitest\winapitest.cpp(183): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+e:\projects\winapitest\winapitest\winapitest.cpp(188): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+e:\projects\winapitest\winapitest\winapitest.cpp(189): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+  winAPItest.vcxproj -> E:\projects\winAPItest\Debug\winAPItest.exe
+  winAPItest.vcxproj -> E:\projects\winAPItest\Debug\winAPItest.pdb (Full PDB)
