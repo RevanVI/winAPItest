@@ -22,24 +22,26 @@ void create2DGrid(HDC hdc, int l, int t, int r, int b, int cx, int cy, int x0, i
 	drawLine(hdc, r, b, l, b);
 	drawLine(hdc, l, b, l, t);
 
-	HPEN hPen = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
+	HPEN hPen = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
 	HPEN oPen = (HPEN)SelectObject(hdc, hPen);
 
 	drawLine(hdc, l, y0, r, y0); //ось Ох
 	drawLine(hdc, x0, t, x0, b); //ось Оу
 
-	int num = (r - x0) / cx; //количество делений справа
-	for (int i = 0; i < num; ++i)
-		drawLine(hdc, x0 + cx * i, y0 - 2, x0 + cx * i, y0 + 2);
-	num = (x0 - l) / cx; //количество делений слева
-	for (int i = 0; i < num; ++i)
-		drawLine(hdc, x0 - cx * i, y0 - 2, x0 - cx * i, y0 + 2);
-	num = (y0 - t) / cy; //количество делений сверху
-	for (int i = 0; i < num; ++i)
-		drawLine(hdc, x0 - 2, y0 - cy * i, x0 + 2, y0 - cy * i);
-	num = (b - y0) / cy; //количество делений снизу
-	for (int i = 0; i < num; ++i)
-		drawLine(hdc, x0 - 2, y0 + cy * i, x0 + 2, y0 + cy * i);
+	SelectObject(hdc, oPen);
+	DeleteObject(hPen);
+int num = (r - x0) / cx; //количество делений справа
+for (int i = 0; i < num; ++i)
+	drawLine(hdc, x0 + cx * i, y0 - 2, x0 + cx * i, y0 + 2);
+num = (x0 - l) / cx; //количество делений слева
+for (int i = 0; i < num; ++i)
+	drawLine(hdc, x0 - cx * i, y0 - 2, x0 - cx * i, y0 + 2);
+num = (y0 - t) / cy; //количество делений сверху
+for (int i = 0; i < num; ++i)
+	drawLine(hdc, x0 - 2, y0 - cy * i, x0 + 2, y0 - cy * i);
+num = (b - y0) / cy; //количество делений снизу
+for (int i = 0; i < num; ++i)
+	drawLine(hdc, x0 - 2, y0 + cy * i, x0 + 2, y0 + cy * i);
 }
 
 
@@ -49,6 +51,8 @@ matrix::matrix(int m, int n)
 	coef = new int*[m];
 	for (int i = 0; i < m; ++i)
 		coef[i] = new int[n];
+	this->m = m;
+	this->n = n;
 }
 
 matrix::matrix(const matrix& matr)
@@ -102,13 +106,16 @@ matrix operator*(const matrix& left, const matrix& right)
 	right.getDimens(mR, nR);
 	int m = mL,
 		n = nR;
-	matrix res(m ,n);
+	matrix res(m, n);
+	for (int i = 0; i < m; ++i)
+		for (int j = 0; j < n; ++j)
+			res(i, j) = 0;
 	int strPos = 0;
 	for (int i = 0; i < m; ++i, strPos = 0)
 	{
 		for (int strPos = 0; strPos < n; ++strPos) //
-			for (int j = 0; j < nL; ++i)
-				res(i, strPos) = left.getElem(i, j) * right.getElem(j, strPos);
+			for (int j = 0; j < nL; ++j)
+				res(i, strPos) += left.getElem(i, j) * right.getElem(j, strPos);
 	}
 	return res;
 }
@@ -122,4 +129,10 @@ matrix operator*(int left, const matrix& right)
 		for (int j = 0; j < n; ++j)
 			res(i, j) = left * right.getElem(i, j);
 	return res;
+}
+
+
+int* matrix::getStr(int m)
+{
+	return coef[m];
 }

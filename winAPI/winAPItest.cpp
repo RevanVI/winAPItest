@@ -136,12 +136,36 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			PAINTSTRUCT ps;
 			HDC hdc = BeginPaint(hWnd, &ps);
 			int l = xClient / 20,
-				r = xClient - l,
+				r = 0.6 * xClient,
 				t = yClient / 20,
 				b = yClient - t,
 				yc = 10,
-				xc = 10;
-			create2DGrid(hdc, l, t, r, b, xc, yc, (r - l) / 2, (b - t) / 2);
+				xc = 10,
+				x0 = (r - l) / 2 + l,
+				y0 = (b - t) / 2 + t;
+			create2DGrid(hdc, l, t, r, b, xc, yc, x0, y0);
+
+			matrix line = matrix(2, 3);
+			line(0, 0) = 0;
+			line(0, 1) = 0;
+			line(0, 2) = 1;
+			line(1, 0) = 8;
+			line(1, 1) = 8;
+			line(1, 2) = 1;
+
+			matrix tM = matrix(3, 3);
+			tM(0, 0) = 1;
+			tM(0, 1) = 0;
+			tM(0, 2) = 0;
+			tM(1, 0) = 0;
+			tM(1, 1) = 1;
+			tM(1, 2) = 0;
+			tM(2, 0) = 2;
+			tM(2, 1) = 0;
+			tM(2, 2) = 1;
+			drawLine(hdc, line(0, 0) * xc + x0, -1 * line(0, 1) * yc + y0, line(1, 0) * xc + x0, -1 * line(1, 1) * yc + y0);
+			line = line * tM;
+			drawLine(hdc, line(0, 0) * xc + x0, -1 * line(0, 1) * yc + y0, line(1, 0) * xc + x0, -1 * line(1, 1) * yc + y0);
 			EndPaint(hWnd, &ps);
 		}
 		break;

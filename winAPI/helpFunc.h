@@ -17,6 +17,8 @@ public:
 	void getDimens(int& m, int& n) const;
 	int getElem(int i, int j) const;
 
+	int* getStr(int m);
+
 	int& operator()(int, int);
 	matrix& operator=(const matrix& obj);
 	friend matrix operator*(const matrix&, const matrix&);
