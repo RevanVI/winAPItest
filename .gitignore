@@ -6,4 +6,5 @@ Debug/
 *.sln
 winAPI/*.vcxproj*
 winAPI/winAPI.VC.db
-winAPItest.VC.db
+winAPI.VC*
+*.vcxproj*

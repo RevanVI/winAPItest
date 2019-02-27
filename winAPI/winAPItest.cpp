@@ -106,12 +106,12 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 {
 	RECT rcWnd, rcWorkArea;
 	GetWindowRect(hWnd, &rcWnd);
-	GetClientRect(hWnd, &rcWorkArea);
 	static int xClient, yClient;
 
 	GetClientRect(hWnd, &rcWorkArea);
-	static int width = rcWorkArea.right;
-	static int height = rcWorkArea.bottom;
+	static int width, height; 
+	width = rcWorkArea.right;
+	height = rcWorkArea.bottom;
 
 	static int cxChar;
 	static TCHAR* str = L"Привет!";
@@ -135,22 +135,13 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		{
 			PAINTSTRUCT ps;
 			HDC hdc = BeginPaint(hWnd, &ps);
-			int l = xClient / 10,
+			int l = xClient / 20,
 				r = xClient - l,
-				t = yClient / 10,
+				t = yClient / 20,
 				b = yClient - t,
-				yc = yClient / 2,
-				xc = xClient / 2;
-			drawLine(hdc, l, t, r, t);
-			drawLine(hdc, r, t, r, b);
-			drawLine(hdc, r, b, l, b);
-			drawLine(hdc, l, b, l, t);
-
-			int x0 = xc + 0.5 * (r - l),
-				y0 = yc,
-				x = xc + 0.5 * (r - l) * cos(2 * 3.14 * 0.25),
-				y = yc - 0.5 * (b - t) * sin(2 * 3.14 * 0.25);
-
+				yc = 10,
+				xc = 10;
+			create2DGrid(hdc, l, t, r, b, xc, yc, (r - l) / 2, (b - t) / 2);
 			EndPaint(hWnd, &ps);
 		}
 		break;

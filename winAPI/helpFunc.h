@@ -3,6 +3,7 @@
 
 bool drawLine(HDC hdc, int x0, int y0, int x, int y);
 bool drawBrickDim(HDC hdc, int x, int y, int w, int h, int d, COLORREF color);
+void create2DGrid(HDC hdc, int l, int t, int r, int b, int cx, int cy, int x0, int y0);
 
 class matrix
 {
@@ -18,7 +19,7 @@ public:
 
 	int& operator()(int, int);
 	matrix& operator=(const matrix& obj);
-	friend matrix operator*(matrix, matrix);
-	friend matrix operator*(int, matrix);
+	friend matrix operator*(const matrix&, const matrix&);
+	friend matrix operator*(int, const matrix&);
 	
 };
