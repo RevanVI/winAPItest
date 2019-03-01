@@ -1,10 +1,23 @@
 #include "helpFunc.h"
+#include <cmath>
+
+
 
 bool drawLine(HDC hdc, int x0, int y0, int x, int y)
 {
 	POINT pt;
 	MoveToEx(hdc, x0, y0, &pt);
 	return LineTo(hdc, x, y);
+}
+
+bool drawPol2Dim(HDC hdc, matrix fig, COLORREF color, coordDescr d)
+{
+	int m, n;
+	fig.getDimens(m, n);
+	for (int i = 0; i < m - 1; ++i)
+		drawLine(hdc, fig(i, 0) * d.cx + d.x0, -fig(i, 1) * d.cy + d.y0, fig(i + 1, 0) * d.cx + d.x0, -fig(i + 1, 1) * d.cy + d.y0);
+	drawLine(hdc, fig(m - 1, 0) * d.cx + d.x0, -fig(m - 1, 1) * d.cy + d.y0, fig(0, 0) * d.cx + d.x0, -fig(0, 1) * d.cy + d.y0);
+	return true;
 }
 
 bool drawBrickDim(HDC hdc, int x, int y, int w, int h, int d, COLORREF color)
@@ -15,42 +28,47 @@ bool drawBrickDim(HDC hdc, int x, int y, int w, int h, int d, COLORREF color)
 	return true;
 }
 
-void create2DGrid(HDC hdc, int l, int t, int r, int b, int cx, int cy, int x0, int y0)
+void create2DGrid(HDC hdc, coordDescr d)
 {
-	drawLine(hdc, l, t, r, t);
-	drawLine(hdc, r, t, r, b);
-	drawLine(hdc, r, b, l, b);
-	drawLine(hdc, l, b, l, t);
+	drawLine(hdc, d.l, d.t, d.r, d.t);
+	drawLine(hdc, d.r, d.t, d.r, d.b);
+	drawLine(hdc, d.r, d.b, d.l, d.b);
+	drawLine(hdc, d.l, d.b, d.l, d.t);
 
 	HPEN hPen = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
 	HPEN oPen = (HPEN)SelectObject(hdc, hPen);
 
-	drawLine(hdc, l, y0, r, y0); //ось ќх
-	drawLine(hdc, x0, t, x0, b); //ось ќу
+	drawLine(hdc, d.l, d.y0, d.r, d.y0); //ось ќх
+	drawLine(hdc, d.x0, d.t, d.x0, d.b); //ось ќу
 
 	SelectObject(hdc, oPen);
 	DeleteObject(hPen);
-int num = (r - x0) / cx; //количество делений справа
+int num = (d.r - d.x0) / d.cx; //количество делений справа
 for (int i = 0; i < num; ++i)
-	drawLine(hdc, x0 + cx * i, y0 - 2, x0 + cx * i, y0 + 2);
-num = (x0 - l) / cx; //количество делений слева
+	drawLine(hdc, d.x0 + d.cx * i, d.y0 - 2, d.x0 + d.cx * i, d.y0 + 2);
+num = (d.x0 - d.l) / d.cx; //количество делений слева
 for (int i = 0; i < num; ++i)
-	drawLine(hdc, x0 - cx * i, y0 - 2, x0 - cx * i, y0 + 2);
-num = (y0 - t) / cy; //количество делений сверху
+	drawLine(hdc, d.x0 - d.cx * i, d.y0 - 2, d.x0 - d.cx * i, d.y0 + 2);
+num = (d.y0 - d.t) / d.cy; //количество делений сверху
 for (int i = 0; i < num; ++i)
-	drawLine(hdc, x0 - 2, y0 - cy * i, x0 + 2, y0 - cy * i);
-num = (b - y0) / cy; //количество делений снизу
+	drawLine(hdc, d.x0 - 2, d.y0 - d.cy * i, d.x0 + 2, d.y0 - d.cy * i);
+num = (d.b - d.y0) / d.cy; //количество делений снизу
 for (int i = 0; i < num; ++i)
-	drawLine(hdc, x0 - 2, y0 + cy * i, x0 + 2, y0 + cy * i);
+	drawLine(hdc, d.x0 - 2, d.y0 + d.cy * i, d.x0 + 2, d.y0 + d.cy * i);
 }
 
 
 
+double roundPrec(double val, int prec)
+{
+	return round(val * pow(10, prec)) / pow(10, prec);
+}
+
 matrix::matrix(int m, int n)
 {
-	coef = new int*[m];
+	coef = new double*[m];
 	for (int i = 0; i < m; ++i)
-		coef[i] = new int[n];
+		coef[i] = new double[n];
 	this->m = m;
 	this->n = n;
 }
@@ -58,9 +76,9 @@ matrix::matrix(int m, int n)
 matrix::matrix(const matrix& matr)
 {
 	matr.getDimens(m, n);
-	coef = new int*[m];
+	coef = new double*[m];
 	for (int i = 0; i < m; ++i)
-		coef[i] = new int[n];
+		coef[i] = new double[n];
 	for (int i = 0; i < m; ++i)
 		for (int j = 0; j < n; ++j)
 			coef[i][j] = matr.getElem(i, j);
@@ -79,12 +97,12 @@ void matrix::getDimens(int& m, int& n) const
 	n = this->n;
 }
 
-int matrix::getElem(int i, int j) const
+double matrix::getElem(int i, int j) const
 {
 	return coef[i][j];
 }
 
-int& matrix::operator()(int i, int j)
+double& matrix::operator()(int i, int j)
 {
 	return coef[i][j];
 }
@@ -115,24 +133,24 @@ matrix operator*(const matrix& left, const matrix& right)
 	{
 		for (int strPos = 0; strPos < n; ++strPos) //
 			for (int j = 0; j < nL; ++j)
-				res(i, strPos) += left.getElem(i, j) * right.getElem(j, strPos);
+				res(i, strPos) += roundPrec(left.getElem(i, j) * right.getElem(j, strPos), 2);
 	}
 	return res;
 }
 
-matrix operator*(int left, const matrix& right)
+matrix operator*(double left, const matrix& right)
 {
 	int m, n;
 	right.getDimens(m, n);
 	matrix res(m, n);
 	for (int i = 0; i < m; ++i)
 		for (int j = 0; j < n; ++j)
-			res(i, j) = left * right.getElem(i, j);
+			res(i, j) = roundPrec(left * right.getElem(i, j), 2);
 	return res;
 }
 
 
-int* matrix::getStr(int m)
+double* matrix::getStr(int m)
 {
 	return coef[m];
 }

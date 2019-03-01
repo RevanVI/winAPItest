@@ -1,27 +1,35 @@
 #pragma once
 #include <Windows.h>
-
-bool drawLine(HDC hdc, int x0, int y0, int x, int y);
-bool drawBrickDim(HDC hdc, int x, int y, int w, int h, int d, COLORREF color);
-void create2DGrid(HDC hdc, int l, int t, int r, int b, int cx, int cy, int x0, int y0);
+struct coordDescr
+{
+	int l, t, r, b; //Координаты границ области рисования
+	int cx, cy, cz; //масштаб осей
+	int x0, y0, z0; //начало координат (в пикслелях отн-но рабочей области)
+};
 
 class matrix
 {
 private:
-	int** coef;
+	double** coef;
 	int m, n;
 public: 
 	matrix(int m = 2, int n = 2);
 	matrix(const matrix& matr);
 	~matrix();
 	void getDimens(int& m, int& n) const;
-	int getElem(int i, int j) const;
+	double getElem(int i, int j) const;
 
-	int* getStr(int m);
+	double* getStr(int m);
 
-	int& operator()(int, int);
+	double& operator()(int, int);
 	matrix& operator=(const matrix& obj);
 	friend matrix operator*(const matrix&, const matrix&);
-	friend matrix operator*(int, const matrix&);
+	friend matrix operator*(double, const matrix&);
 	
 };
+
+
+bool drawLine(HDC hdc, int x0, int y0, int x, int y);
+bool drawPol2Dim(HDC hdc, matrix fig, COLORREF color, coordDescr descr);
+bool drawBrickDim(HDC hdc, int x, int y, int w, int h, int d, COLORREF color);
+void create2DGrid(HDC hdc, coordDescr d);

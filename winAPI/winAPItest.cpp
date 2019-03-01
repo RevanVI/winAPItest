@@ -14,7 +14,7 @@
 #define ID_BUT2 4002
 #define ID_BUT3 4003
 #define ID_BUT4 4004
-
+#define PI 3.14
 // √лобальные переменные:
 HINSTANCE hInst;                                // текущий экземпл€р
 TCHAR szMainClass[] = L"MainClass";
@@ -135,37 +135,69 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		{
 			PAINTSTRUCT ps;
 			HDC hdc = BeginPaint(hWnd, &ps);
-			int l = xClient / 20,
-				r = 0.6 * xClient,
-				t = yClient / 20,
-				b = yClient - t,
-				yc = 10,
-				xc = 10,
-				x0 = (r - l) / 2 + l,
-				y0 = (b - t) / 2 + t;
-			create2DGrid(hdc, l, t, r, b, xc, yc, x0, y0);
+			coordDescr d;
+			d.l = xClient / 20,
+			d.r = 0.6 * xClient,
+			d.t = yClient / 20,
+			d.b = yClient - d.t,
+			d.cy = 10,
+			d.cx = 10,
+			d.x0 = (d.r - d.l) / 2 + d.l,
+			d.y0 = (d.b - d.t) / 2 + d.t;
+			create2DGrid(hdc, d);
 
-			matrix line = matrix(2, 3);
-			line(0, 0) = 0;
-			line(0, 1) = 0;
-			line(0, 2) = 1;
-			line(1, 0) = 8;
-			line(1, 1) = 8;
-			line(1, 2) = 1;
+			matrix fig = matrix(4, 3);
+			fig(0, 0) = 0;
+			fig(0, 1) = 0;
+			fig(0, 2) = 1;
+			fig(1, 0) = 0;
+			fig(1, 1) = 3;
+			fig(1, 2) = 1;
+			fig(2, 0) = 2;
+			fig(2, 1) = 3;
+			fig(2, 2) = 1;
+			fig(3, 0) = 2;
+			fig(3, 1) = 0;
+			fig(3, 2) = 1;
 
-			matrix tM = matrix(3, 3);
-			tM(0, 0) = 1;
-			tM(0, 1) = 0;
-			tM(0, 2) = 0;
-			tM(1, 0) = 0;
-			tM(1, 1) = 1;
-			tM(1, 2) = 0;
-			tM(2, 0) = 2;
-			tM(2, 1) = 0;
-			tM(2, 2) = 1;
-			drawLine(hdc, line(0, 0) * xc + x0, -1 * line(0, 1) * yc + y0, line(1, 0) * xc + x0, -1 * line(1, 1) * yc + y0);
-			line = line * tM;
-			drawLine(hdc, line(0, 0) * xc + x0, -1 * line(0, 1) * yc + y0, line(1, 0) * xc + x0, -1 * line(1, 1) * yc + y0);
+			int px = 3,
+				py = 4;
+			matrix tM1 = matrix(3, 3);
+			tM1(0, 0) = 1;
+			tM1(0, 1) = 0;
+			tM1(0, 2) = 0;
+			tM1(1, 0) = 0;
+			tM1(1, 1) = 1;
+			tM1(1, 2) = 0;
+			tM1(2, 0) = -px;
+			tM1(2, 1) = -py;
+			tM1(2, 2) = 1;
+			matrix tM2 = matrix(3, 3);
+			tM2(0, 0) = cos(45 * PI / 180);
+			tM2(0, 1) = sin(45 * PI / 180);
+			tM2(0, 2) = 0;
+			tM2(1, 0) = -sin(45 * PI / 180);
+			tM2(1, 1) = cos(45 * PI / 180);
+			tM2(1, 2) = 0;
+			tM2(2, 0) = 0;
+			tM2(2, 1) = 0;
+			tM2(2, 2) = 1;
+			matrix tM3 = matrix(3, 3);
+			tM3(0, 0) = 1;
+			tM3(0, 1) = 0;
+			tM3(0, 2) = 0;
+			tM3(1, 0) = 0;
+			tM3(1, 1) = 1;
+			tM3(1, 2) = 0;
+			tM3(2, 0) = px;
+			tM3(2, 1) = py;
+			tM3(2, 2) = 1;
+			matrix tM = tM1 * tM2 * tM3;
+			drawPol2Dim(hdc, fig, RGB(0, 0, 0), d);
+			//drawLine(hdc, fig(0, 0) * xc + x0, -1 * fig(0, 1) * yc + y0, fig(1, 0) * xc + x0, -1 * fig(1, 1) * yc + y0);
+			fig = fig * tM;
+			//drawLine(hdc, fig(0, 0) * xc + x0, -1 * fig(0, 1) * yc + y0, fig(1, 0) * xc + x0, -1 * fig(1, 1) * yc + y0);
+			drawPol2Dim(hdc, fig, RGB(0, 0, 0), d);
 			EndPaint(hWnd, &ps);
 		}
 		break;
