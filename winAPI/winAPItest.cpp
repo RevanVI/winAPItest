@@ -140,64 +140,56 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			d.r = 0.6 * xClient,
 			d.t = yClient / 20,
 			d.b = yClient - d.t,
-			d.cy = 10,
-			d.cx = 10,
+			d.cy = 20,
+			d.cx = 20,
 			d.x0 = (d.r - d.l) / 2 + d.l,
 			d.y0 = (d.b - d.t) / 2 + d.t;
-			create2DGrid(hdc, d);
 
-			matrix fig = matrix(4, 3);
-			fig(0, 0) = 0;
-			fig(0, 1) = 0;
-			fig(0, 2) = 1;
-			fig(1, 0) = 0;
-			fig(1, 1) = 3;
-			fig(1, 2) = 1;
-			fig(2, 0) = 2;
-			fig(2, 1) = 3;
-			fig(2, 2) = 1;
-			fig(3, 0) = 2;
-			fig(3, 1) = 0;
-			fig(3, 2) = 1;
+			bool mode = false;
 
-			int px = 3,
-				py = 4;
-			matrix tM1 = matrix(3, 3);
-			tM1(0, 0) = 1;
-			tM1(0, 1) = 0;
-			tM1(0, 2) = 0;
-			tM1(1, 0) = 0;
-			tM1(1, 1) = 1;
-			tM1(1, 2) = 0;
-			tM1(2, 0) = -px;
-			tM1(2, 1) = -py;
-			tM1(2, 2) = 1;
-			matrix tM2 = matrix(3, 3);
-			tM2(0, 0) = cos(45 * PI / 180);
-			tM2(0, 1) = sin(45 * PI / 180);
-			tM2(0, 2) = 0;
-			tM2(1, 0) = -sin(45 * PI / 180);
-			tM2(1, 1) = cos(45 * PI / 180);
-			tM2(1, 2) = 0;
-			tM2(2, 0) = 0;
-			tM2(2, 1) = 0;
-			tM2(2, 2) = 1;
-			matrix tM3 = matrix(3, 3);
-			tM3(0, 0) = 1;
-			tM3(0, 1) = 0;
-			tM3(0, 2) = 0;
-			tM3(1, 0) = 0;
-			tM3(1, 1) = 1;
-			tM3(1, 2) = 0;
-			tM3(2, 0) = px;
-			tM3(2, 1) = py;
-			tM3(2, 2) = 1;
-			matrix tM = tM1 * tM2 * tM3;
-			drawPol2Dim(hdc, fig, RGB(0, 0, 0), d);
-			//drawLine(hdc, fig(0, 0) * xc + x0, -1 * fig(0, 1) * yc + y0, fig(1, 0) * xc + x0, -1 * fig(1, 1) * yc + y0);
-			fig = fig * tM;
-			//drawLine(hdc, fig(0, 0) * xc + x0, -1 * fig(0, 1) * yc + y0, fig(1, 0) * xc + x0, -1 * fig(1, 1) * yc + y0);
-			drawPol2Dim(hdc, fig, RGB(0, 0, 0), d);
+			matrix dim(4, 4);
+			dim(0, 0) = 0.925;  dim(0, 1) = -0.134;  dim(0, 2) = 0; dim(0, 3) = 0;
+			dim(1, 0) = 0;      dim(1, 1) = 0.935;   dim(1, 2) = 0; dim(1, 3) = 0;
+			dim(2, 0) = -0.378; dim(2, 1) = -0.327;  dim(2, 2) = 0; dim(2, 3) = 0;
+			dim(3, 0) = 0;      dim(3, 1) = 0;       dim(3, 2) = 0; dim(3, 3) = 1;
+
+			matrix iso(4, 4);
+			iso(0, 0) = 0.707;  iso(0, 1) = -0.408;  iso(0, 2) = 0; iso(0, 3) = 0;
+			iso(1, 0) = 0;      iso(1, 1) = 0.816;   iso(1, 2) = 0; iso(1, 3) = 0;
+			iso(2, 0) = -0.707; iso(2, 1) = -0.408;  iso(2, 2) = 0; iso(2, 3) = 0;
+			iso(3, 0) = 0;      iso(3, 1) = 0;       iso(3, 2) = 0; iso(3, 3) = 1;
+
+			create3DGrid(hdc, d, mode);
+
+			int x = 2, y = 2, z = 2;
+			matrix fig(8, 4);
+			fig(0, 0) = 4 + x; fig(0, 1) = 0 + y;  fig(0, 2) = 0 + z; fig(0, 3) = 1;
+			fig(1, 0) = 8 + x; fig(1, 1) = 0 + y;  fig(1, 2) = 0 + z; fig(1, 3) = 1;
+			fig(2, 0) = 8 + x; fig(2, 1) = 0 + y;  fig(2, 2) = 4 + z; fig(2, 3) = 1;
+			fig(3, 0) = 4 + x; fig(3, 1) = 0 + y;  fig(3, 2) = 4 + z; fig(3, 3) = 1;
+			fig(4, 0) = 4 + x; fig(4, 1) = 4 + y;  fig(4, 2) = 4 + z; fig(4, 3) = 1;
+			fig(5, 0) = 8 + x; fig(5, 1) = 4 + y;  fig(5, 2) = 4 + z; fig(5, 3) = 1;
+			fig(6, 0) = 8 + x; fig(6, 1) = 4 + y;  fig(6, 2) = 0 + z; fig(6, 3) = 1;
+			fig(7, 0) = 4 + x; fig(7, 1) = 4 + y;  fig(7, 2) = 0 + z; fig(7, 3) = 1;
+
+			matrix axis(2, 4); //ось поворота
+			axis(0, 0) = 0; axis(0, 1) = 0; axis(0, 2) = 0; axis(0, 3) = 1; 
+			axis(1, 0) = 12; axis(1, 1) = 0; axis(1, 2) = 0; axis(1, 3) = 1;
+			double angle = 180 * PI / 180; //угол поворота
+
+			fig = rotateFig(fig, axis, angle);
+			if (mode)
+			{
+				fig = fig * iso;
+				axis = axis * iso;
+			}
+			else
+			{
+				fig = fig * dim;
+				axis = axis * dim;
+			}
+			drawLine(hdc, axis(0, 0), axis(0, 1), axis(1, 0), axis(1, 1), d);
+			drawBrickDim(hdc, fig, d, RGB(0, 0, 0));
 			EndPaint(hWnd, &ps);
 		}
 		break;

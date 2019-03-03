@@ -28,8 +28,10 @@ public:
 	
 };
 
-
+bool drawLine(HDC hdc, double x0, double y0, double x, double y, coordDescr d);
 bool drawLine(HDC hdc, int x0, int y0, int x, int y);
 bool drawPol2Dim(HDC hdc, matrix fig, COLORREF color, coordDescr descr);
-bool drawBrickDim(HDC hdc, int x, int y, int w, int h, int d, COLORREF color);
+bool drawBrickDim(HDC hdc, matrix fig, coordDescr d, COLORREF color);
+matrix rotateFig(matrix fig, matrix axis, double angle);
 void create2DGrid(HDC hdc, coordDescr d);
+void create3DGrid(HDC hdc, coordDescr d, bool mode); // mode = true - isometric, mode = false - dim
