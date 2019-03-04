@@ -7,13 +7,21 @@
 #include <cmath>
 #include "helpFunc.h"
 
-#define ID_EDIT 1000
-#define ID_LIST 2000
-#define ID_COMBOBOX 3000
-#define ID_BUT1 4001
-#define ID_BUT2 4002
-#define ID_BUT3 4003
-#define ID_BUT4 4004
+#define ID_EDITCX 1000
+#define ID_EDITCY 1001
+#define ID_EDITCZ 1002
+#define ID_EDITX 2000
+#define ID_EDITY 2001
+#define ID_MBUT0 3000
+#define ID_MBUT1 3001
+#define ID_MBUT2 3002
+#define ID_EDITXF 4000
+#define ID_EDITYF 4001
+#define ID_EDITZF 4002
+#define ID_EDITH 4003
+#define ID_EDITW 4004
+#define ID_EDITD 4005
+
 #define PI 3.14
 // Глобальные переменные:
 HINSTANCE hInst;                                // текущий экземпляр
@@ -113,20 +121,65 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	width = rcWorkArea.right;
 	height = rcWorkArea.bottom;
 
-	static int cxChar;
-	static TCHAR* str = L"Привет!";
-	static int charNum = wcslen(str + 1);
-	static int defW = 40;
-	static int defH = 60;
-	static int defStr = 5; 
-	static int curW = defW;
-	static int curH = defH;
-	static int curStr = defStr;
+	static HWND titleLbl, 
+		stepLbl, cxEdit, cyEdit, czEdit, 
+		coordLbl, xEdit, yEdit, 
+		modeLbl, mBut0, mBut1, mBut2,
+		figLbl, xfEdit, yfEdit, zfEdit, hEdit, wEdit, dEdit,
+		but1;
     switch (message)
     {
 	case WM_CREATE:
 		{
+		double y = 0.05 * rcWnd.bottom;
+		double x = 0.65 * rcWnd.right;
+		titleLbl = CreateWindow(L"static", L"Настройки", WS_CHILD | WS_VISIBLE | SS_CENTER,
+			x, y, 0.3 * rcWnd.right, 0.025 * rcWnd.bottom, hWnd, NULL, hInst, NULL);
+		y += 0.025 * rcWnd.bottom + 0.025 * rcWnd.bottom;
 
+		stepLbl = CreateWindow(L"static", L"Масштабы осей:", WS_CHILD | WS_VISIBLE | SS_LEFT,
+			x, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, NULL, hInst, NULL);
+		cxEdit = CreateWindow(L"edit", L"40", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
+			x + 0.1 * rcWnd.right, 0.1 * rcWnd.bottom, 0.025 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITCX, hInst, NULL);
+		cyEdit = CreateWindow(L"edit", L"40", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
+			x + 0.125 * rcWnd.right, 0.1 * rcWnd.bottom, 0.025 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITCY, hInst, NULL);
+		czEdit = CreateWindow(L"edit", L"40", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
+			x + 0.15 * rcWnd.right, 0.1 * rcWnd.bottom, 0.025 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITCZ, hInst, NULL);
+
+		y += 0.04 * rcWnd.bottom + 0.01 * rcWnd.bottom;
+		coordLbl = CreateWindow(L"static", L"Начало координат:", WS_CHILD | WS_VISIBLE | SS_LEFT,
+			x, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, NULL, hInst, NULL);
+		xEdit = CreateWindow(L"edit", L"0,5", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
+			x + 0.1 * rcWnd.right, y, 0.025 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITX, hInst, NULL);
+		yEdit = CreateWindow(L"edit", L"0,5", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
+			x + 0.125 * rcWnd.right, y, 0.025 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITY, hInst, NULL);
+
+		y += 0.04 * rcWnd.bottom + 0.01 * rcWnd.bottom;
+		modeLbl = CreateWindow(L"static", L"Режим:", WS_CHILD | WS_VISIBLE | SS_LEFT,
+			x, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, NULL, hInst, NULL);
+		mBut0 = CreateWindow(L"button", NULL, WS_CHILD | WS_BORDER | BS_GROUPBOX,
+			x + 0.1 * rcWnd.right, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_MBUT0, hInst, NULL);
+		mBut1 = CreateWindow(L"button", L"Изометр.", WS_CHILD | WS_VISIBLE | WS_BORDER | BS_AUTORADIOBUTTON,
+			x + 0.1 * rcWnd.right, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_MBUT1, hInst, NULL);
+		mBut1 = CreateWindow(L"button", L"Диметр.", WS_CHILD | WS_VISIBLE | WS_BORDER | BS_AUTORADIOBUTTON,
+			x + 0.2 * rcWnd.right, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_MBUT2, hInst, NULL);
+
+		y += 0.04 * rcWnd.bottom + 0.04 * rcWnd.bottom;
+		figLbl = CreateWindow(L"static", L"Параметры фигуры", WS_CHILD | WS_VISIBLE | SS_CENTER,
+			x, y, 0.3 * rcWnd.right, 0.025 * rcWnd.bottom, hWnd, NULL, hInst, NULL);
+		y += 0.04 * rcWnd.bottom;
+		figLbl = CreateWindow(L"static", L"Координаты: ", WS_CHILD | WS_VISIBLE | SS_LEFT,
+			x, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, NULL, hInst, NULL);
+		xfEdit = CreateWindow(L"edit", L"40", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
+			x + 0.1 * rcWnd.right, y, 0.025 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITXF, hInst, NULL);
+		yfEdit = CreateWindow(L"edit", L"40", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
+			x + 0.125 * rcWnd.right, y, 0.025 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITYF, hInst, NULL);
+		zfEdit = CreateWindow(L"edit", L"40", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
+			x + 0.15 * rcWnd.right, y, 0.025 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITZF, hInst, NULL);
+
+
+		//but1 = CreateWindow(L"button", L"Open", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		//	0.9 * xClient, 0.9* yClient, 100, 100, hWnd, (HMENU)ID_BUT1, hInst, NULL);
 		}
 		break;
     case WM_COMMAND:
