@@ -5,16 +5,20 @@
 #include "winAPItest.h"
 #include <windowsx.h>
 #include <cmath>
+#include <string>
 #include "helpFunc.h"
 
 #define ID_EDITCX 1000
 #define ID_EDITCY 1001
 #define ID_EDITCZ 1002
+
 #define ID_EDITX 2000
 #define ID_EDITY 2001
+
 #define ID_MBUT0 3000
 #define ID_MBUT1 3001
 #define ID_MBUT2 3002
+
 #define ID_EDITXF 4000
 #define ID_EDITYF 4001
 #define ID_EDITZF 4002
@@ -22,22 +26,28 @@
 #define ID_EDITW 4004
 #define ID_EDITD 4005
 
+#define ID_EDITXA1 5000
+#define ID_EDITYA1 5001
+#define ID_EDITZA1 5002
+#define ID_EDITXA2 5003
+#define ID_EDITYA2 5004
+#define ID_EDITZA2 5005
+
+#define ID_EDITANG 6000
+#define ID_BUT1 7000
 #define PI 3.14
+
+using namespace std;
 // Глобальные переменные:
 HINSTANCE hInst;                                // текущий экземпляр
 TCHAR szMainClass[] = L"MainClass";
-TCHAR szPopupClass[] = L"PopupClass";
-TCHAR szChildClass[] = L"ChildClass";
 
 ATOM                RegisterClass(HINSTANCE hInstance, WNDPROC Proc, LPCTSTR szName);
 LRESULT CALLBACK    MainWndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK	PopupWndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK	ChildWndProc(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK CountWndProc(HWND hwnd, LPARAM lParam);
-int AmountWindows();
-int count = 0;
-
-
+LRESULT CALLBACK EditWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+WNDPROC OldWndProc;
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
@@ -45,8 +55,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_ int       nCmdShow)
 {
 	RegisterClass(hInstance, MainWndProc, szMainClass);
-	RegisterClass(hInstance, PopupWndProc, szPopupClass);
-	RegisterClass(hInstance, ChildWndProc, szChildClass);
 	// Выполнить инициализацию приложения:
 	hInst = hInstance; // Сохранить дескриптор экземпляра в глобальной переменной
 	HWND hWnd;
@@ -70,7 +78,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
     }
-
     return (int) msg.wParam;
 }
 
@@ -125,12 +132,49 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		stepLbl, cxEdit, cyEdit, czEdit, 
 		coordLbl, xEdit, yEdit, 
 		modeLbl, mBut0, mBut1, mBut2,
-		figLbl, xfEdit, yfEdit, zfEdit, hEdit, wEdit, dEdit,
+		figLbl0, figLbl1, xfEdit, yfEdit, zfEdit, figLbl2, hEdit, wEdit, dEdit,
+		axLbl0, axLbl1, xaEdit1, yaEdit1, zaEdit1, axLbl2, xaEdit2, yaEdit2, zaEdit2,
+		angLbl, angEdit,
 		but1;
+
+	static bool mode;
+	static double x0mod, y0mod;
+	static coordDescr d;
+
+	int minC = 10, maxC = 60, defC = 40;
+	double minPos = 0.25, maxPos = 0.75, defPos = 0.5;
+	//int numX, numY, numZ, numXm, numYm, numZm;
+
+	static matrix fig(8, 4); 
+
+	static matrix axis(2, 4); //ось поворота
+
+	static double angle; //угол поворота
     switch (message)
     {
 	case WM_CREATE:
 		{
+		//инициализация данных
+		x0mod = 0.5;
+		y0mod = 0.5;
+		mode = true;
+		d.cy = 20;
+		d.cx = 20;
+
+		fig(0, 0) = 0;					fig(0, 1) = 0;					fig(0, 2) = 0;				 fig(0, 3) = 1;
+		fig(1, 0) = fig(0, 0) + 4;		fig(1, 1) = fig(0, 1);			fig(1, 2) = fig(0, 2);		 fig(1, 3) = 1;
+		fig(3, 0) = fig(0, 0);			fig(3, 1) = fig(0, 1);			fig(3, 2) = fig(0, 2) + 4;   fig(3, 3) = 1;
+		fig(7, 0) = fig(0, 0);			fig(7, 1) = fig(0 , 1)+ 4;		fig(7, 2) = fig(0, 2);		 fig(7, 3) = 1;
+
+		fig(2, 0) = fig(1, 0);	fig(2, 1) = fig(0, 1);  fig(2, 2) = fig(3, 2);	fig(2, 3) = 1;
+		fig(4, 0) = fig(0, 0);  fig(4, 1) = fig(7, 1);  fig(4, 2) = fig(3, 2);  fig(4, 3) = 1;
+		fig(5, 0) = fig(1, 0);  fig(5, 1) = fig(7, 1);  fig(5, 2) = fig(3, 2);  fig(5, 3) = 1;
+		fig(6, 0) = fig(1, 0);  fig(6, 1) = fig(7, 1);  fig(6, 2) = fig(0, 2);  fig(6, 3) = 1;
+
+		axis(0, 0) = 0; axis(0, 1) = 0; axis(0, 2) = 0; axis(0, 3) = 1;
+		axis(1, 0) = 10; axis(1, 1) = 10; axis(1, 2) = 10; axis(1, 3) = 1;
+		angle = 0 * PI / 180;
+
 		double y = 0.05 * rcWnd.bottom;
 		double x = 0.65 * rcWnd.right;
 		titleLbl = CreateWindow(L"static", L"Настройки", WS_CHILD | WS_VISIBLE | SS_CENTER,
@@ -139,20 +183,25 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 
 		stepLbl = CreateWindow(L"static", L"Масштабы осей:", WS_CHILD | WS_VISIBLE | SS_LEFT,
 			x, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, NULL, hInst, NULL);
-		cxEdit = CreateWindow(L"edit", L"40", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
+		cxEdit = CreateWindow(L"edit", L"20", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
 			x + 0.1 * rcWnd.right, 0.1 * rcWnd.bottom, 0.025 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITCX, hInst, NULL);
-		cyEdit = CreateWindow(L"edit", L"40", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
+		cyEdit = CreateWindow(L"edit", L"20", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
 			x + 0.125 * rcWnd.right, 0.1 * rcWnd.bottom, 0.025 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITCY, hInst, NULL);
-		czEdit = CreateWindow(L"edit", L"40", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
+		czEdit = CreateWindow(L"edit", L"20", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
 			x + 0.15 * rcWnd.right, 0.1 * rcWnd.bottom, 0.025 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITCZ, hInst, NULL);
 
 		y += 0.04 * rcWnd.bottom + 0.01 * rcWnd.bottom;
 		coordLbl = CreateWindow(L"static", L"Начало координат:", WS_CHILD | WS_VISIBLE | SS_LEFT,
 			x, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, NULL, hInst, NULL);
-		xEdit = CreateWindow(L"edit", L"0,5", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
+		xEdit = CreateWindow(L"edit", L"0.5", WS_CHILD | WS_VISIBLE | WS_BORDER,
 			x + 0.1 * rcWnd.right, y, 0.025 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITX, hInst, NULL);
-		yEdit = CreateWindow(L"edit", L"0,5", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
+		yEdit = CreateWindow(L"edit", L"0.5", WS_CHILD | WS_VISIBLE | WS_BORDER,
 			x + 0.125 * rcWnd.right, y, 0.025 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITY, hInst, NULL);
+		SendMessage(xEdit, EM_LIMITTEXT, 5, 0);
+		SendMessage(yEdit, EM_LIMITTEXT, 5, 0);
+		OldWndProc = (WNDPROC)SetWindowLong(xEdit, GWL_WNDPROC, (LONG)EditWndProc);
+		SetWindowLong(yEdit, GWL_WNDPROC, (LONG)EditWndProc);
+
 
 		y += 0.04 * rcWnd.bottom + 0.01 * rcWnd.bottom;
 		modeLbl = CreateWindow(L"static", L"Режим:", WS_CHILD | WS_VISIBLE | SS_LEFT,
@@ -161,44 +210,318 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			x + 0.1 * rcWnd.right, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_MBUT0, hInst, NULL);
 		mBut1 = CreateWindow(L"button", L"Изометр.", WS_CHILD | WS_VISIBLE | WS_BORDER | BS_AUTORADIOBUTTON,
 			x + 0.1 * rcWnd.right, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_MBUT1, hInst, NULL);
-		mBut1 = CreateWindow(L"button", L"Диметр.", WS_CHILD | WS_VISIBLE | WS_BORDER | BS_AUTORADIOBUTTON,
+		mBut2 = CreateWindow(L"button", L"Диметр.", WS_CHILD | WS_VISIBLE | WS_BORDER | BS_AUTORADIOBUTTON,
 			x + 0.2 * rcWnd.right, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_MBUT2, hInst, NULL);
+		SendMessage(mBut1, BM_SETCHECK, 1, 0L);
+
 
 		y += 0.04 * rcWnd.bottom + 0.04 * rcWnd.bottom;
-		figLbl = CreateWindow(L"static", L"Параметры фигуры", WS_CHILD | WS_VISIBLE | SS_CENTER,
+		figLbl0 = CreateWindow(L"static", L"Фигура", WS_CHILD | WS_VISIBLE | SS_CENTER,
 			x, y, 0.3 * rcWnd.right, 0.025 * rcWnd.bottom, hWnd, NULL, hInst, NULL);
 		y += 0.04 * rcWnd.bottom;
-		figLbl = CreateWindow(L"static", L"Координаты: ", WS_CHILD | WS_VISIBLE | SS_LEFT,
+		figLbl1 = CreateWindow(L"static", L"Координаты: ", WS_CHILD | WS_VISIBLE | SS_LEFT,
 			x, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, NULL, hInst, NULL);
-		xfEdit = CreateWindow(L"edit", L"40", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
-			x + 0.1 * rcWnd.right, y, 0.025 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITXF, hInst, NULL);
-		yfEdit = CreateWindow(L"edit", L"40", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
-			x + 0.125 * rcWnd.right, y, 0.025 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITYF, hInst, NULL);
-		zfEdit = CreateWindow(L"edit", L"40", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
-			x + 0.15 * rcWnd.right, y, 0.025 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITZF, hInst, NULL);
+		xfEdit = CreateWindow(L"edit", L"0.00", WS_CHILD | WS_VISIBLE | WS_BORDER,
+			x + 0.1 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITXF, hInst, NULL);
+		yfEdit = CreateWindow(L"edit", L"0.00", WS_CHILD | WS_VISIBLE | WS_BORDER,
+			x + 0.13 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITYF, hInst, NULL);
+		zfEdit = CreateWindow(L"edit", L"0.00", WS_CHILD | WS_VISIBLE | WS_BORDER,
+			x + 0.16 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITZF, hInst, NULL);
+		SendMessage(xfEdit, EM_LIMITTEXT, 5, 0);
+		SendMessage(yfEdit, EM_LIMITTEXT, 5, 0);
+		SendMessage(zfEdit, EM_LIMITTEXT, 5, 0);
+		SetWindowLong(xfEdit, GWL_WNDPROC, (LONG)EditWndProc);
+		SetWindowLong(yfEdit, GWL_WNDPROC, (LONG)EditWndProc);
+		SetWindowLong(zfEdit, GWL_WNDPROC, (LONG)EditWndProc);
 
+		y += 0.04 * rcWnd.bottom;
+		figLbl2 = CreateWindow(L"static", L"Параметры: ", WS_CHILD | WS_VISIBLE | SS_LEFT,
+			x, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, NULL, hInst, NULL);
+		hEdit = CreateWindow(L"edit", L"4.00", WS_CHILD | WS_VISIBLE | WS_BORDER,
+			x + 0.1 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITH, hInst, NULL);
+		wEdit = CreateWindow(L"edit", L"4.00", WS_CHILD | WS_VISIBLE | WS_BORDER,
+			x + 0.13 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITW, hInst, NULL);
+		dEdit = CreateWindow(L"edit", L"4.00", WS_CHILD | WS_VISIBLE | WS_BORDER,
+			x + 0.16 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITD, hInst, NULL);
+		SendMessage(hEdit, EM_LIMITTEXT, 5, 0);
+		SendMessage(wEdit, EM_LIMITTEXT, 5, 0);
+		SendMessage(dEdit, EM_LIMITTEXT, 5, 0);
+		SetWindowLong(hEdit, GWL_WNDPROC, (LONG)EditWndProc);
+		SetWindowLong(wEdit, GWL_WNDPROC, (LONG)EditWndProc);
+		SetWindowLong(dEdit, GWL_WNDPROC, (LONG)EditWndProc);
 
-		//but1 = CreateWindow(L"button", L"Open", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		//	0.9 * xClient, 0.9* yClient, 100, 100, hWnd, (HMENU)ID_BUT1, hInst, NULL);
+		y += 0.04 * rcWnd.bottom + 0.04 * rcWnd.bottom;
+		axLbl0 = CreateWindow(L"static", L"Ось вращения", WS_CHILD | WS_VISIBLE | SS_CENTER,
+			x, y, 0.3 * rcWnd.right, 0.025 * rcWnd.bottom, hWnd, NULL, hInst, NULL);
+		y += 0.04 * rcWnd.bottom;
+		axLbl1 = CreateWindow(L"static", L"Первая точка: ", WS_CHILD | WS_VISIBLE | SS_LEFT,
+			x, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, NULL, hInst, NULL);
+		xaEdit1 = CreateWindow(L"edit", L"0.00", WS_CHILD | WS_VISIBLE | WS_BORDER,
+			x + 0.1 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITXA1, hInst, NULL);
+		yaEdit1 = CreateWindow(L"edit", L"0.00", WS_CHILD | WS_VISIBLE | WS_BORDER,
+			x + 0.13 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITYA1, hInst, NULL);
+		zaEdit1 = CreateWindow(L"edit", L"0.00", WS_CHILD | WS_VISIBLE | WS_BORDER,
+			x + 0.16 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITZA1, hInst, NULL);
+		SendMessage(xaEdit1, EM_LIMITTEXT, 5, 0);
+		SendMessage(yaEdit1, EM_LIMITTEXT, 5, 0);
+		SendMessage(zaEdit1, EM_LIMITTEXT, 5, 0);
+		SetWindowLong(xaEdit1, GWL_WNDPROC, (LONG)EditWndProc);
+		SetWindowLong(yaEdit1, GWL_WNDPROC, (LONG)EditWndProc);
+		SetWindowLong(zaEdit1, GWL_WNDPROC, (LONG)EditWndProc);
+
+		y += 0.04 * rcWnd.bottom;
+		axLbl2 = CreateWindow(L"static", L"Вторая точка: ", WS_CHILD | WS_VISIBLE | SS_LEFT,
+			x, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, NULL, hInst, NULL);
+		xaEdit2 = CreateWindow(L"edit", L"10.0", WS_CHILD | WS_VISIBLE | WS_BORDER,
+			x + 0.1 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITXA2, hInst, NULL);
+		yaEdit2 = CreateWindow(L"edit", L"10.0", WS_CHILD | WS_VISIBLE | WS_BORDER,
+			x + 0.13 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITYA2, hInst, NULL);
+		zaEdit2 = CreateWindow(L"edit", L"10.0", WS_CHILD | WS_VISIBLE | WS_BORDER,
+			x + 0.16 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITZA2, hInst, NULL);
+		SendMessage(xaEdit2, EM_LIMITTEXT, 5, 0);
+		SendMessage(yaEdit2, EM_LIMITTEXT, 5, 0);
+		SendMessage(zaEdit2, EM_LIMITTEXT, 5, 0);
+		SetWindowLong(xaEdit2, GWL_WNDPROC, (LONG)EditWndProc);
+		SetWindowLong(yaEdit2, GWL_WNDPROC, (LONG)EditWndProc);
+		SetWindowLong(zaEdit2, GWL_WNDPROC, (LONG)EditWndProc);
+
+		y += 0.04 * rcWnd.bottom;
+		angLbl = CreateWindow(L"static", L"Угол поворота: ", WS_CHILD | WS_VISIBLE | SS_LEFT,
+			x, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, NULL, hInst, NULL);
+		angEdit = CreateWindow(L"edit", L"0.00", WS_CHILD | WS_VISIBLE | WS_BORDER,
+			x + 0.1 * rcWnd.right, y, 0.035 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITANG, hInst, NULL);
+		SendMessage(angEdit, EM_LIMITTEXT, 6, 0);
+		SetWindowLong(angEdit, GWL_WNDPROC, (LONG)EditWndProc);
+
+		y += 4 * 0.04 * rcWnd.bottom;
+		but1 = CreateWindow(L"button", L"Выполнить", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+			x + 0.1 * rcWnd.right, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_BUT1, hInst, NULL);
 		}
 		break;
     case WM_COMMAND:
+		{
+			TCHAR buf[10];
+			int size;
+			switch (LOWORD(wParam))
+			{
+				case ID_MBUT1:
+				{
+					mode = true;
+					RECT r;
+					r.bottom = d.b;
+					r.top = d.t;
+					r.right = d.r;
+					r.left = d.l;
+					RedrawWindow(hWnd, &r, NULL, RDW_ERASE | RDW_INVALIDATE);
+				}
+				break;
+				case ID_MBUT2:
+				{
+					mode = false;
+					RECT r;
+					r.bottom = d.b;
+					r.top = d.t;
+					r.right = d.r;
+					r.left = d.l;
+					RedrawWindow(hWnd, &r, NULL, RDW_ERASE | RDW_INVALIDATE);
+				}
+				break;
+				case ID_EDITCX:
+				case ID_EDITCY:
+				case ID_EDITCZ:
+				{
+					HWND* edit;
+					if (HIWORD(wParam) == EN_KILLFOCUS)
+					{
+						if (LOWORD(wParam) == ID_EDITCX)
+							edit = &cxEdit;
+						if (LOWORD(wParam) == ID_EDITCY)
+							edit = &cyEdit;
+						if (LOWORD(wParam) == ID_EDITCZ)
+							edit = &czEdit;
+						size = SendMessage(*edit, EM_GETLINE, 0, (LPARAM)buf);
+						long val = wcstol(buf, NULL, 10);
+						if (size == 0 || val < minC || val > maxC)
+						{
+							if (val < minC)
+								val = minC;
+							else
+								val = maxC;
+							_ltow(val, buf, 10);
+							SetWindowText(*edit, buf);
+						}
+					}
+				}
+				break;
+				case ID_EDITX:
+				case ID_EDITY:
+				{
+					HWND* edit;
+					if (HIWORD(wParam) == EN_KILLFOCUS)
+					{
+						if (LOWORD(wParam) == ID_EDITX)
+							edit = &xEdit;
+						if (LOWORD(wParam) == ID_EDITY)
+							edit = &yEdit;
+						size = SendMessage(*edit, EM_GETLINE, 0, (LPARAM)buf);
+						double val = wcstod(buf, NULL);
+						if (size == 0 || val < minPos || val > maxPos)
+						{
+							if (val < minPos)
+								val = minPos;
+							else
+								val = maxPos;
+							val = round(val * pow(10, 3)) / pow(10, 3);
+							wstring str = to_wstring(val).substr(0, 4);
+							SetWindowText(*edit, str.c_str());
+						}
+					}
+				}
+				break;
+				case ID_EDITXF:
+				case ID_EDITYF:
+				case ID_EDITZF:
+				case ID_EDITXA1:
+				case ID_EDITXA2:
+				case ID_EDITYA1:
+				case ID_EDITYA2:
+				case ID_EDITZA1:
+				case ID_EDITZA2:
+				{
+					HWND* edit;
+					if (HIWORD(wParam) == EN_KILLFOCUS)
+					{
+						double coef;
+						int num, numm;
+						if (LOWORD(wParam) == ID_EDITXF)
+							edit = &xfEdit;
+						if (LOWORD(wParam) == ID_EDITYF)
+							edit = &yfEdit;
+						if (LOWORD(wParam) == ID_EDITZF)
+							edit = &zfEdit;
+						if (LOWORD(wParam) == ID_EDITXA1)
+							edit = &xaEdit1;
+						if (LOWORD(wParam) == ID_EDITXA2)
+							edit = &xaEdit2;
+						if (LOWORD(wParam) == ID_EDITYA1)
+							edit = &yaEdit1;
+						if (LOWORD(wParam) == ID_EDITYA2)
+							edit = &yaEdit2;
+						if (LOWORD(wParam) == ID_EDITZA1)
+							edit = &zaEdit1;
+						if (LOWORD(wParam) == ID_EDITZA2)
+							edit = &zaEdit2;
+						size = SendMessage(*edit, EM_GETLINE, 0, (LPARAM)buf);
+						double val = wcstod(buf, NULL);
+						if (size == 0 || val < 0)
+						{
+							val = round(1 * pow(10, 3)) / pow(10, 3);
+							wstring str = to_wstring(val).substr(0, 1);
+							SetWindowText(*edit, str.c_str());
+						}
+					}
+				}
+				break;
+				case ID_EDITH:
+				case ID_EDITW:
+				case ID_EDITD:
+				{
+					HWND* edit;
+					if (HIWORD(wParam) == EN_KILLFOCUS)
+					{
+						if (LOWORD(wParam) == ID_EDITH)
+							edit = &hEdit;
+						if (LOWORD(wParam) == ID_EDITW)
+							edit = &wEdit;
+						if (LOWORD(wParam) == ID_EDITD)
+							edit = &dEdit;
+						size = SendMessage(*edit, EM_GETLINE, 0, (LPARAM)buf);
+						double val = wcstod(buf, NULL);
+						if (size == 0 || val <= 0)
+						{
+							val = round(4 * pow(10, 3)) / pow(10, 3);
+							wstring str = to_wstring(val).substr(0, 4);
+							SetWindowText(*edit, str.c_str());
+						}
+					}
+				}
+				break;
+				case ID_BUT1:
+				{
+					SendMessage(cxEdit, EM_GETLINE, 0, (LPARAM)buf);
+					d.cx = wcstol(buf, NULL, 10);
+					SendMessage(cyEdit, EM_GETLINE, 0, (LPARAM)buf);
+					d.cy = wcstol(buf, NULL, 10);
+					SendMessage(czEdit, EM_GETLINE, 0, (LPARAM)buf);
+					d.cz = wcstol(buf, NULL, 10);
+
+					SendMessage(xEdit, EM_GETLINE, 0, (LPARAM)buf);
+					x0mod = wcstod(buf, NULL);
+					SendMessage(yEdit, EM_GETLINE, 0, (LPARAM)buf);
+					y0mod = wcstod(buf, NULL);
+
+					SendMessage(xfEdit, EM_GETLINE, 0, (LPARAM)buf);
+					fig(0, 0) = wcstod(buf, NULL);
+					double val = fig(0, 0);
+					SendMessage(yfEdit, EM_GETLINE, 0, (LPARAM)buf);
+					fig(0, 1) = wcstod(buf, NULL);
+					SendMessage(zfEdit, EM_GETLINE, 0, (LPARAM)buf);
+					fig(0, 2) = wcstod(buf, NULL);
+
+					SendMessage(xaEdit1, EM_GETLINE, 0, (LPARAM)buf);
+					axis(0, 0) = wcstod(buf, NULL);
+					SendMessage(yaEdit1, EM_GETLINE, 0, (LPARAM)buf);
+					axis(0, 1) = wcstod(buf, NULL);
+					SendMessage(zaEdit1, EM_GETLINE, 0, (LPARAM)buf);
+					axis(0, 2) = wcstod(buf, NULL);
+
+					SendMessage(xaEdit2, EM_GETLINE, 0, (LPARAM)buf);
+					axis(1, 0) = wcstod(buf, NULL);
+					SendMessage(yaEdit2, EM_GETLINE, 0, (LPARAM)buf);
+					axis(1, 1) = wcstod(buf, NULL);
+					SendMessage(zaEdit2, EM_GETLINE, 0, (LPARAM)buf);
+					axis(1, 2) = wcstod(buf, NULL);
+
+					SendMessage(hEdit, EM_GETLINE, 0, (LPARAM)buf);
+					fig(7, 1) = fig(0, 1) + wcstod(buf, NULL);
+					SendMessage(wEdit, EM_GETLINE, 0, (LPARAM)buf);
+					fig(1, 0) = fig(0, 0) + wcstod(buf, NULL);
+					SendMessage(dEdit, EM_GETLINE, 0, (LPARAM)buf);
+					fig(3, 2) = fig(0, 2) + wcstod(buf, NULL);
+
+					SendMessage(angEdit, EM_GETLINE, 0, (LPARAM)buf);
+					angle = wcstod(buf, NULL) * PI / 180;
+
+					RECT r;
+					r.bottom = d.b;
+					r.top = d.t;
+					r.right = d.r;
+					r.left = d.l;
+					RedrawWindow(hWnd, &r, NULL, RDW_ERASE | RDW_INVALIDATE);
+				}
+				break;
+			}
+		}
 		break;
 	case WM_PAINT:
 		{
 			PAINTSTRUCT ps;
 			HDC hdc = BeginPaint(hWnd, &ps);
-			coordDescr d;
-			d.l = xClient / 20,
-			d.r = 0.6 * xClient,
-			d.t = yClient / 20,
-			d.b = yClient - d.t,
-			d.cy = 20,
-			d.cx = 20,
-			d.x0 = (d.r - d.l) / 2 + d.l,
-			d.y0 = (d.b - d.t) / 2 + d.t;
 
-			bool mode = false;
+			d.l = xClient / 20;
+			d.r = 0.6 * xClient;
+			d.t = yClient / 20;
+			d.b = yClient - d.t;
+			d.x0 = (d.r - d.l) * x0mod + d.l;
+			d.y0 = (d.b - d.t) * y0mod + d.t;
+
+									fig(1, 1) = fig(0, 1);  fig(1, 2) = fig(0, 2);  
+			fig(3, 0) = fig(0, 0);	fig(3, 1) = fig(0, 1);						   
+			fig(7, 0) = fig(0, 0);							fig(7, 2) = fig(0, 2);	
+			fig(2, 0) = fig(1, 0);	fig(2, 1) = fig(0, 1);  fig(2, 2) = fig(3, 2);
+			fig(4, 0) = fig(0, 0);  fig(4, 1) = fig(7, 1);  fig(4, 2) = fig(3, 2); 
+			fig(5, 0) = fig(1, 0);  fig(5, 1) = fig(7, 1);  fig(5, 2) = fig(3, 2);  
+			fig(6, 0) = fig(1, 0);  fig(6, 1) = fig(7, 1);  fig(6, 2) = fig(0, 2);  
 
 			matrix dim(4, 4);
 			dim(0, 0) = 0.925;  dim(0, 1) = -0.134;  dim(0, 2) = 0; dim(0, 3) = 0;
@@ -214,35 +537,20 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 
 			create3DGrid(hdc, d, mode);
 
-			int x = 2, y = 2, z = 2;
-			matrix fig(8, 4);
-			fig(0, 0) = 4 + x; fig(0, 1) = 0 + y;  fig(0, 2) = 0 + z; fig(0, 3) = 1;
-			fig(1, 0) = 8 + x; fig(1, 1) = 0 + y;  fig(1, 2) = 0 + z; fig(1, 3) = 1;
-			fig(2, 0) = 8 + x; fig(2, 1) = 0 + y;  fig(2, 2) = 4 + z; fig(2, 3) = 1;
-			fig(3, 0) = 4 + x; fig(3, 1) = 0 + y;  fig(3, 2) = 4 + z; fig(3, 3) = 1;
-			fig(4, 0) = 4 + x; fig(4, 1) = 4 + y;  fig(4, 2) = 4 + z; fig(4, 3) = 1;
-			fig(5, 0) = 8 + x; fig(5, 1) = 4 + y;  fig(5, 2) = 4 + z; fig(5, 3) = 1;
-			fig(6, 0) = 8 + x; fig(6, 1) = 4 + y;  fig(6, 2) = 0 + z; fig(6, 3) = 1;
-			fig(7, 0) = 4 + x; fig(7, 1) = 4 + y;  fig(7, 2) = 0 + z; fig(7, 3) = 1;
-
-			matrix axis(2, 4); //ось поворота
-			axis(0, 0) = 0; axis(0, 1) = 0; axis(0, 2) = 0; axis(0, 3) = 1; 
-			axis(1, 0) = 12; axis(1, 1) = 0; axis(1, 2) = 0; axis(1, 3) = 1;
-			double angle = 180 * PI / 180; //угол поворота
-
-			fig = rotateFig(fig, axis, angle);
+			matrix fig1 = rotateFig(fig, axis, angle);
+			matrix axis1;
 			if (mode)
 			{
-				fig = fig * iso;
-				axis = axis * iso;
+				fig1 = fig1 * iso;
+				axis1 = axis * iso;
 			}
 			else
 			{
-				fig = fig * dim;
-				axis = axis * dim;
+				fig1 = fig1 * dim;
+				axis1 = axis * dim;
 			}
-			drawLine(hdc, axis(0, 0), axis(0, 1), axis(1, 0), axis(1, 1), d);
-			drawBrickDim(hdc, fig, d, RGB(0, 0, 0));
+			drawLine(hdc, axis1(0, 0), axis1(0, 1), axis1(1, 0), axis1(1, 1), d);
+			drawBrickDim(hdc, fig1, d, RGB(0, 0, 0));
 			EndPaint(hWnd, &ps);
 		}
 		break;
@@ -265,44 +573,8 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
     return 0;
 }
 
-LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	RECT rc;
-	GetWindowRect(hwnd, &rc);
-	switch (msg)
-	{
-	case WM_LBUTTONUP:
-		break;
-	default: 
-		return DefWindowProc(hwnd, msg, wParam, lParam);
-	}
-	return 0;
-}
 
-LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	RECT rc;
-	GetWindowRect(hwnd, &rc);
-	switch (msg)
-	{
-	case WM_LBUTTONDOWN:
-		//SetWindowPos(hwnd, NULL, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_HIDEWINDOW | SWP_NOMOVE);
-		break;
-	case WM_SYSCOMMAND:
-		if (wParam == SC_RESTORE)
-		{
-			MessageBeep(MB_ICONASTERISK);
-			WINDOWPLACEMENT pl;
-			pl.length = sizeof(WINDOWPLACEMENT);
-			SetRect(&pl.rcNormalPosition, 0, 0, rc.right - rc.left, 500);
-			SetWindowPlacement(hwnd, &pl); 
-		}
-	default:
-		return DefWindowProc(hwnd, msg, wParam, lParam);
-	}
-	return 0;
-}
-
+/*
 BOOL CALLBACK CountWndProc(HWND hwnd, LPARAM lParam)
 {
 	TCHAR winClass[50] = {0};
@@ -315,4 +587,29 @@ int AmountWindows()
 {
 	EnumWindows(CountWndProc, 0L);
 	return count;
+}
+*/
+LRESULT CALLBACK EditWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	static int count = 0;
+	switch (message)
+	{
+	case WM_CHAR: 
+	{
+		TCHAR str[10];
+		int size = SendMessage(hWnd, EM_GETLINE, 0, (LPARAM)str);
+		
+		if (LOWORD(wParam) == '-' && size != 0)
+			return 0;
+		else if (LOWORD(wParam) == '.' && wcschr(str, '.') != 0)
+			return 0;
+		else if (LOWORD(wParam) != VK_BACK && LOWORD(wParam) != '-' && LOWORD(wParam) != '.' && (LOWORD(wParam) < '0' || LOWORD(wParam) > '9'))
+			return 0;
+	}
+		break;
+	default: 
+		break;
+	}
+	return CallWindowProc(OldWndProc, hWnd, message,
+		wParam, lParam);
 }
