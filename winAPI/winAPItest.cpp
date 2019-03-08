@@ -138,7 +138,11 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		but1;
 
 	static bool mode;
+	static bool viewChange;
+	static bool sizeChange;
 	static double x0mod, y0mod;
+	static double hf, wf, df;
+	static double ohf, owf, odf;
 	static coordDescr d;
 
 	int minC = 10, maxC = 60, defC = 40;
@@ -146,6 +150,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	//int numX, numY, numZ, numXm, numYm, numZm;
 
 	static matrix fig(8, 4); 
+	static matrix fig1(8, 4);
 
 	static matrix axis(2, 4); //ось поворота
 
@@ -157,19 +162,25 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		//инициализаци€ данных
 		x0mod = 0.5;
 		y0mod = 0.5;
+		hf = wf = df = 4.0;
+		ohf = owf = odf = hf;
 		mode = true;
+		viewChange = false;
+		sizeChange = false;
 		d.cy = 20;
 		d.cx = 20;
 
 		fig(0, 0) = 0;					fig(0, 1) = 0;					fig(0, 2) = 0;				 fig(0, 3) = 1;
-		fig(1, 0) = fig(0, 0) + 4;		fig(1, 1) = fig(0, 1);			fig(1, 2) = fig(0, 2);		 fig(1, 3) = 1;
-		fig(3, 0) = fig(0, 0);			fig(3, 1) = fig(0, 1);			fig(3, 2) = fig(0, 2) + 4;   fig(3, 3) = 1;
-		fig(7, 0) = fig(0, 0);			fig(7, 1) = fig(0 , 1)+ 4;		fig(7, 2) = fig(0, 2);		 fig(7, 3) = 1;
+		fig(5, 0) = 4;					fig(5, 1) = 4;					fig(5, 2) = 4;				 fig(5, 3) = 1;
 
-		fig(2, 0) = fig(1, 0);	fig(2, 1) = fig(0, 1);  fig(2, 2) = fig(3, 2);	fig(2, 3) = 1;
-		fig(4, 0) = fig(0, 0);  fig(4, 1) = fig(7, 1);  fig(4, 2) = fig(3, 2);  fig(4, 3) = 1;
-		fig(5, 0) = fig(1, 0);  fig(5, 1) = fig(7, 1);  fig(5, 2) = fig(3, 2);  fig(5, 3) = 1;
-		fig(6, 0) = fig(1, 0);  fig(6, 1) = fig(7, 1);  fig(6, 2) = fig(0, 2);  fig(6, 3) = 1;
+		fig(1, 0) = fig(5, 0);			fig(1, 1) = fig(0, 1);			fig(1, 2) = fig(0, 2);		 fig(1, 3) = 1;
+		fig(2, 0) = fig(5, 0);			fig(2, 1) = fig(0, 1);			fig(2, 2) = fig(5, 2);		 fig(2, 3) = 1;
+		fig(3, 0) = fig(0, 0);			fig(3, 1) = fig(0, 1);			fig(3, 2) = fig(5, 0);		 fig(3, 3) = 1;
+		fig(4, 0) = fig(0, 0);			fig(4, 1) = fig(5, 1);			fig(4, 2) = fig(5, 2);		 fig(4, 3) = 1;
+		fig(6, 0) = fig(5, 0);			fig(6, 1) = fig(5, 1);			fig(6, 2) = fig(0, 2);		 fig(6, 3) = 1;
+		fig(7, 0) = fig(0, 0);			fig(7, 1) = fig(5, 1);		    fig(7, 2) = fig(0, 2);		 fig(7, 3) = 1;
+
+		fig1 = fig;
 
 		axis(0, 0) = 0; axis(0, 1) = 0; axis(0, 2) = 0; axis(0, 3) = 1;
 		axis(1, 0) = 10; axis(1, 1) = 10; axis(1, 2) = 10; axis(1, 3) = 1;
@@ -237,10 +248,10 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		y += 0.04 * rcWnd.bottom;
 		figLbl2 = CreateWindow(L"static", L"ѕараметры: ", WS_CHILD | WS_VISIBLE | SS_LEFT,
 			x, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, NULL, hInst, NULL);
-		hEdit = CreateWindow(L"edit", L"4.00", WS_CHILD | WS_VISIBLE | WS_BORDER,
-			x + 0.1 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITH, hInst, NULL);
 		wEdit = CreateWindow(L"edit", L"4.00", WS_CHILD | WS_VISIBLE | WS_BORDER,
-			x + 0.13 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITW, hInst, NULL);
+			x + 0.1 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITW, hInst, NULL);
+		hEdit = CreateWindow(L"edit", L"4.00", WS_CHILD | WS_VISIBLE | WS_BORDER,
+			x + 0.13 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITH, hInst, NULL);
 		dEdit = CreateWindow(L"edit", L"4.00", WS_CHILD | WS_VISIBLE | WS_BORDER,
 			x + 0.16 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_EDITD, hInst, NULL);
 		SendMessage(hEdit, EM_LIMITTEXT, 5, 0);
@@ -306,6 +317,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			{
 				case ID_MBUT1:
 				{
+					viewChange = true;
 					mode = true;
 					RECT r;
 					r.bottom = d.b;
@@ -317,6 +329,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				break;
 				case ID_MBUT2:
 				{
+					viewChange = true;
 					mode = false;
 					RECT r;
 					r.bottom = d.b;
@@ -416,7 +429,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 						if (size == 0 || val < 0)
 						{
 							val = round(1 * pow(10, 3)) / pow(10, 3);
-							wstring str = to_wstring(val).substr(0, 1);
+							wstring str = to_wstring(val).substr(0, 4);
 							SetWindowText(*edit, str.c_str());
 						}
 					}
@@ -427,22 +440,36 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				case ID_EDITD:
 				{
 					HWND* edit;
+					HWND* check;
 					if (HIWORD(wParam) == EN_KILLFOCUS)
 					{
+						
 						if (LOWORD(wParam) == ID_EDITH)
+						{
 							edit = &hEdit;
+							check = &xfEdit;
+						}
 						if (LOWORD(wParam) == ID_EDITW)
+						{
 							edit = &wEdit;
+							check = &yfEdit;
+						}
 						if (LOWORD(wParam) == ID_EDITD)
+						{
 							edit = &dEdit;
+							check = &zfEdit;
+						}
 						size = SendMessage(*edit, EM_GETLINE, 0, (LPARAM)buf);
 						double val = wcstod(buf, NULL);
-						if (size == 0 || val <= 0)
+						SendMessage(*check, EM_GETLINE, 0, (LPARAM)buf);
+						double valCh = wcstod(buf, NULL);
+						if (size == 0 || val == valCh)
 						{
-							val = round(4 * pow(10, 3)) / pow(10, 3);
+							val = round((valCh + 4) * pow(10, 3)) / pow(10, 3);
 							wstring str = to_wstring(val).substr(0, 4);
 							SetWindowText(*edit, str.c_str());
 						}
+						sizeChange = true;
 					}
 				}
 				break;
@@ -461,12 +488,11 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 					y0mod = wcstod(buf, NULL);
 
 					SendMessage(xfEdit, EM_GETLINE, 0, (LPARAM)buf);
-					fig(0, 0) = wcstod(buf, NULL);
-					double val = fig(0, 0);
+					fig1(0, 0) = wcstod(buf, NULL);
 					SendMessage(yfEdit, EM_GETLINE, 0, (LPARAM)buf);
-					fig(0, 1) = wcstod(buf, NULL);
+					fig1(0, 1) = wcstod(buf, NULL);
 					SendMessage(zfEdit, EM_GETLINE, 0, (LPARAM)buf);
-					fig(0, 2) = wcstod(buf, NULL);
+					fig1(0, 2) = wcstod(buf, NULL);
 
 					SendMessage(xaEdit1, EM_GETLINE, 0, (LPARAM)buf);
 					axis(0, 0) = wcstod(buf, NULL);
@@ -483,11 +509,14 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 					axis(1, 2) = wcstod(buf, NULL);
 
 					SendMessage(hEdit, EM_GETLINE, 0, (LPARAM)buf);
-					fig(7, 1) = fig(0, 1) + wcstod(buf, NULL);
+					ohf = hf;
+					hf = wcstod(buf, NULL);
 					SendMessage(wEdit, EM_GETLINE, 0, (LPARAM)buf);
-					fig(1, 0) = fig(0, 0) + wcstod(buf, NULL);
+					owf = wf;
+					wf = wcstod(buf, NULL);
 					SendMessage(dEdit, EM_GETLINE, 0, (LPARAM)buf);
-					fig(3, 2) = fig(0, 2) + wcstod(buf, NULL);
+					odf = df;
+					df = wcstod(buf, NULL);
 
 					SendMessage(angEdit, EM_GETLINE, 0, (LPARAM)buf);
 					angle = wcstod(buf, NULL) * PI / 180;
@@ -515,13 +544,21 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			d.x0 = (d.r - d.l) * x0mod + d.l;
 			d.y0 = (d.b - d.t) * y0mod + d.t;
 
-									fig(1, 1) = fig(0, 1);  fig(1, 2) = fig(0, 2);  
-			fig(3, 0) = fig(0, 0);	fig(3, 1) = fig(0, 1);						   
-			fig(7, 0) = fig(0, 0);							fig(7, 2) = fig(0, 2);	
-			fig(2, 0) = fig(1, 0);	fig(2, 1) = fig(0, 1);  fig(2, 2) = fig(3, 2);
-			fig(4, 0) = fig(0, 0);  fig(4, 1) = fig(7, 1);  fig(4, 2) = fig(3, 2); 
-			fig(5, 0) = fig(1, 0);  fig(5, 1) = fig(7, 1);  fig(5, 2) = fig(3, 2);  
-			fig(6, 0) = fig(1, 0);  fig(6, 1) = fig(7, 1);  fig(6, 2) = fig(0, 2);  
+
+			/*
+			fig1(1, 0) = fig1(5, 0);			fig1(1, 1) = fig1(0, 1);			fig1(1, 2) = fig1(0, 2);		 fig1(1, 3) = 1;
+			fig1(2, 0) = fig1(5, 0);			fig1(2, 1) = fig1(0, 1);			fig1(2, 2) = fig1(5, 2);		 fig1(2, 3) = 1;
+			fig1(3, 0) = fig1(0, 0);			fig1(3, 1) = fig1(0, 1);			fig1(3, 2) = fig1(5, 2);		 fig1(3, 3) = 1;
+			fig1(4, 0) = fig1(0, 0);			fig1(4, 1) = fig1(5, 1);			fig1(4, 2) = fig1(5, 2);		 fig1(4, 3) = 1;
+			fig1(6, 0) = fig1(5, 0);			fig1(6, 1) = fig1(5, 1);			fig1(6, 2) = fig1(0, 2);		 fig1(6, 3) = 1;
+			fig1(7, 0) = fig1(0, 0);			fig1(7, 1) = fig1(5, 1);		    fig1(7, 2) = fig1(0, 2);		 fig1(7, 3) = 1;
+			*/
+			double dArr[8][4];
+			for (int i = 0; i < 8; ++i)
+			{
+				for (int j = 0; j < 4; ++j)
+					dArr[i][j] = fig1(i, j);
+			}
 
 			matrix dim(4, 4);
 			dim(0, 0) = 0.925;  dim(0, 1) = -0.134;  dim(0, 2) = 0; dim(0, 3) = 0;
@@ -535,23 +572,84 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			iso(2, 0) = -0.707; iso(2, 1) = -0.408;  iso(2, 2) = 0; iso(2, 3) = 0;
 			iso(3, 0) = 0;      iso(3, 1) = 0;       iso(3, 2) = 0; iso(3, 3) = 1;
 
-			create3DGrid(hdc, d, mode);
 
-			matrix fig1 = rotateFig(fig, axis, angle);
+			create3DGrid(hdc, d, mode);
+			if (!viewChange)
+			{
+				if (sizeChange)
+				{
+					matrix sChange(4, 4);
+					iso(0, 0) = wf / owf;   iso(0, 1) = 0;			iso(0, 2) = 0;			iso(0, 3) = 0;
+					iso(1, 0) = 0;		    iso(1, 1) = hf / ohf;   iso(1, 2) = 0;			iso(1, 3) = 0;
+					iso(2, 0) = 0;		    iso(2, 1) = 0;			iso(2, 2) = df / odf;	iso(2, 3) = 0;
+					iso(3, 0) = 0;			iso(3, 1) = 0;			iso(3, 2) = 0;			iso(3, 3) = 1;
+
+					fig1 = fig1 * sChange;
+					sizeChange = false;
+				}
+				fig1 = rotateFig(fig1, axis, angle);
+			}
+
+			for (int i = 0; i < 8; ++i)
+			{
+				for (int j = 0; j < 4; ++j)
+					dArr[i][j] = fig1(i, j);
+			}
+
 			matrix axis1;
+			matrix figDraw(8, 4);
 			if (mode)
 			{
-				fig1 = fig1 * iso;
+				figDraw = fig1 * iso;
 				axis1 = axis * iso;
 			}
 			else
 			{
-				fig1 = fig1 * dim;
+				figDraw = fig1 * dim;
 				axis1 = axis * dim;
 			}
+
+			for (int i = 0; i < 8; ++i)
+			{
+				for (int j = 0; j < 4; ++j)
+					dArr[i][j] = figDraw(i, j);
+			}
 			drawLine(hdc, axis1(0, 0), axis1(0, 1), axis1(1, 0), axis1(1, 1), d);
-			drawBrickDim(hdc, fig1, d, RGB(0, 0, 0));
+			drawBrickDim(hdc, figDraw, d, RGB(0, 0, 0));
 			EndPaint(hWnd, &ps);
+			viewChange = false;
+			//занесение изменненных координат в интерфейс
+			int prec = 2;
+			int len = 5;
+			double val = fig1(0, 0);
+			val = round(val * pow(10, prec)) / pow(10, prec);
+			wstring str = to_wstring(val).substr(0, len);
+			SetWindowText(xfEdit, str.c_str());
+
+			val = fig1(0, 1);
+			val = round(val * pow(10, prec)) / pow(10, prec);
+			str = to_wstring(val).substr(0, len);
+			SetWindowText(yfEdit, str.c_str());
+
+			val = fig1(0, 2);
+			val = round(val * pow(10, prec)) / pow(10, prec);
+			str = to_wstring(val).substr(0, len);
+			SetWindowText(zfEdit, str.c_str());
+
+			val = fig1(5, 0);
+			val = round(val * pow(10, prec)) / pow(10, prec);
+			str = to_wstring(val).substr(0, len);
+			SetWindowText(wEdit, str.c_str());
+
+			val = fig1(5, 1);
+			val = round(val * pow(10, prec)) / pow(10, prec);
+			str = to_wstring(val).substr(0, len);
+			SetWindowText(hEdit, str.c_str());
+
+			val = fig1(5, 2);
+			val = round(val * pow(10, prec)) / pow(10, prec);
+			str = to_wstring(val).substr(0, len);
+			SetWindowText(dEdit, str.c_str());
 		}
 		break;
 	case WM_SIZE:
@@ -573,22 +671,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
     return 0;
 }
 
-
-/*
-BOOL CALLBACK CountWndProc(HWND hwnd, LPARAM lParam)
-{
-	TCHAR winClass[50] = {0};
-	GetClassName(hwnd, winClass, 50);
-	if (!wcscmp(winClass, szMainClass)) ++count;
-	return true;
-}
-
-int AmountWindows()
-{
-	EnumWindows(CountWndProc, 0L);
-	return count;
-}
-*/
 LRESULT CALLBACK EditWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static int count = 0;
