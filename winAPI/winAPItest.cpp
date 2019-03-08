@@ -579,10 +579,11 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				if (sizeChange)
 				{
 					matrix sChange(4, 4);
-					iso(0, 0) = wf / owf;   iso(0, 1) = 0;			iso(0, 2) = 0;			iso(0, 3) = 0;
-					iso(1, 0) = 0;		    iso(1, 1) = hf / ohf;   iso(1, 2) = 0;			iso(1, 3) = 0;
-					iso(2, 0) = 0;		    iso(2, 1) = 0;			iso(2, 2) = df / odf;	iso(2, 3) = 0;
-					iso(3, 0) = 0;			iso(3, 1) = 0;			iso(3, 2) = 0;			iso(3, 3) = 1;
+					sChange(0, 0) = wf / owf;   sChange(0, 1) = 0;			sChange(0, 2) = 0;			sChange(0, 3) = 0;
+					sChange(1, 0) = 0;		    sChange(1, 1) = hf / ohf;   sChange(1, 2) = 0;			sChange(1, 3) = 0;
+					sChange(2, 0) = 0;		    sChange(2, 1) = 0;			sChange(2, 2) = df / odf;	sChange(2, 3) = 0;
+					sChange(3, 0) = 0;			sChange(3, 1) = 0;			sChange(3, 2) = 0;			sChange(3, 3) = 1;
+
 
 					fig1 = fig1 * sChange;
 					sizeChange = false;
@@ -636,20 +637,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			str = to_wstring(val).substr(0, len);
 			SetWindowText(zfEdit, str.c_str());
 
-			val = fig1(5, 0);
-			val = round(val * pow(10, prec)) / pow(10, prec);
-			str = to_wstring(val).substr(0, len);
-			SetWindowText(wEdit, str.c_str());
-
-			val = fig1(5, 1);
-			val = round(val * pow(10, prec)) / pow(10, prec);
-			str = to_wstring(val).substr(0, len);
-			SetWindowText(hEdit, str.c_str());
-
-			val = fig1(5, 2);
-			val = round(val * pow(10, prec)) / pow(10, prec);
-			str = to_wstring(val).substr(0, len);
-			SetWindowText(dEdit, str.c_str());
 		}
 		break;
 	case WM_SIZE:
