@@ -1,6 +1,10 @@
 #include "helpFunc.h"
 #include <cmath>
 
+double roundTo(double val, int prec)
+{
+	return round(val * pow(10, prec)) / pow(10, prec);
+}
 
 bool drawLine(HDC hdc, double x0, double y0, double x, double y, coordDescr d)
 {
@@ -54,49 +58,118 @@ matrix rotateFig(matrix fig, matrix axis, double angle)
 		vec(0, 2) = (axis(1, 2) - axis(0, 2)) / norm;
 		double k = sqrt(pow(vec(0, 0), 2) + pow(vec(0, 1), 2)); // k = sqrt(cx^2 + cy^2)
 
+		matrix tM(4, 4);
+
 		matrix tM1 = matrix(4, 4); //матрица перемещения
 		tM1(0, 0) = 1;				tM1(0, 1) = 0;				tM1(0, 2) = 0;				tM1(0, 3) = 0;
 		tM1(1, 0) = 0;				tM1(1, 1) = 1;				tM1(1, 2) = 0;				tM1(1, 3) = 0;
 		tM1(2, 0) = 0;				tM1(2, 1) = 0;				tM1(2, 2) = 1;				tM1(2, 3) = 0;
 		tM1(3, 0) = -axis(0, 0);	tM1(3, 1) = -axis(0, 1);	tM1(3, 2) = -axis(0, 2);	tM1(3, 3) = 1;
 
-		matrix tM2 = matrix(4, 4); //матрица поворота отн-но Oz
-		tM2(0, 0) = vec(0, 1) / k;		tM2(0, 1) = vec(0, 0) / k;		tM2(0, 2) = 0;		tM2(0, 3) = 0;
-		tM2(1, 0) = -vec(0, 0) / k;		tM2(1, 1) = vec(0, 1) / k;		tM2(1, 2) = 0;		tM2(1, 3) = 0;
-		tM2(2, 0) = 0;					tM2(2, 1) = 0;					tM2(2, 2) = 1;		tM2(2, 3) = 0;
-		tM2(3, 0) = 0;					tM2(3, 1) = 0;					tM2(3, 2) = 0;		tM2(3, 3) = 1;
+		double dArr[8][4];
+		for (int i = 0; i < 4; ++i)
+		{
+			for (int j = 0; j < 4; ++j)
+				dArr[i][j] = tM1(i, j);
+		}
+		tM = tM1;
 
-		matrix tM3 = matrix(4, 4); //матрица поворота отн-но Ox
-		tM3(0, 0) = 1;			tM3(0, 1) = 0;				tM3(0, 2) = 0;				tM3(0, 3) = 0;
-		tM3(1, 0) = 0;			tM3(1, 1) = k;				tM3(1, 2) = -vec(0, 2);		tM3(1, 3) = 0;
-		tM3(2, 0) = 0;			tM3(2, 1) = vec(0, 2);		tM3(2, 2) = k;				tM3(2, 3) = 0;
-		tM3(3, 0) = 0;			tM3(3, 1) = 0;				tM3(3, 2) = 0;				tM3(3, 3) = 1;
+		//матрица поворота отн-но Oz
+		if (vec(0, 0) > 0.001 || vec(0, 0) < -0.001) //если составляющая cx не равна нулю
+		{
+			tM1(0, 0) = vec(0, 1) / k;		tM1(0, 1) = vec(0, 0) / k;		tM1(0, 2) = 0;		tM1(0, 3) = 0;
+			tM1(1, 0) = -vec(0, 0) / k;		tM1(1, 1) = vec(0, 1) / k;		tM1(1, 2) = 0;		tM1(1, 3) = 0;
+			tM1(2, 0) = 0;					tM1(2, 1) = 0;					tM1(2, 2) = 1;		tM1(2, 3) = 0;
+			tM1(3, 0) = 0;					tM1(3, 1) = 0;					tM1(3, 2) = 0;		tM1(3, 3) = 1;
 
-		matrix tM4 = matrix(4, 4); //матрица поворота отн-но Oy (содерж)
-		tM4(0, 0) = cos(angle);		tM4(0, 1) = 0;			tM4(0, 2) = -sin(angle);	tM4(0, 3) = 0;
-		tM4(1, 0) = 0;				tM4(1, 1) = 1;			tM4(1, 2) = 0;				tM4(1, 3) = 0;
-		tM4(2, 0) = sin(angle);		tM4(2, 1) = 0;			tM4(2, 2) = cos(angle);		tM4(2, 3) = 0;
-		tM4(3, 0) = 0;				tM4(3, 1) = 0;			tM4(3, 2) = 0;				tM4(3, 3) = 1;
+			for (int i = 0; i < 4; ++i)
+			{
+				for (int j = 0; j < 4; ++j)
+					dArr[i][j] = tM1(i, j);
+			}
+			tM = tM * tM1;
+		}
 
-		matrix tM5 = matrix(4, 4); //матрица поворота отн-но Ox (возврат)
-		tM5(0, 0) = 1;			tM5(0, 1) = 0;				tM5(0, 2) = 0;				tM5(0, 3) = 0;
-		tM5(1, 0) = 0;			tM5(1, 1) = k;				tM5(1, 2) = vec(0, 2);		tM5(1, 3) = 0;
-		tM5(2, 0) = 0;			tM5(2, 1) = -vec(0, 2);		tM5(2, 2) = k;				tM5(2, 3) = 0;
-		tM5(3, 0) = 0;			tM5(3, 1) = 0;				tM5(3, 2) = 0;				tM5(3, 3) = 1;
+		//матрица поворота отн-но Ox
+		if (vec(0, 2) > 0.001 || vec(0, 2) < -0.001) //если составляющая cz не равна нулю
+		{
+			tM1(0, 0) = 1;			tM1(0, 1) = 0;				tM1(0, 2) = 0;				tM1(0, 3) = 0;
+			tM1(1, 0) = 0;			tM1(1, 1) = k;				tM1(1, 2) = -vec(0, 2);		tM1(1, 3) = 0;
+			tM1(2, 0) = 0;			tM1(2, 1) = vec(0, 2);		tM1(2, 2) = k;				tM1(2, 3) = 0;
+			tM1(3, 0) = 0;			tM1(3, 1) = 0;				tM1(3, 2) = 0;				tM1(3, 3) = 1;
 
-		matrix tM6 = matrix(4, 4); //матрица поворота отн-но Oz (возврат)
-		tM6(0, 0) = vec(0, 1) / k;		tM6(0, 1) = -vec(0, 0) / k;		tM6(0, 2) = 0; tM6(0, 3) = 0;
-		tM6(1, 0) = vec(0, 0) / k;		tM6(1, 1) = vec(0, 1) / k;		tM6(1, 2) = 0; tM6(1, 3) = 0;
-		tM6(2, 0) = 0;					tM6(2, 1) = 0;					tM6(2, 2) = 1; tM6(2, 3) = 0;
-		tM6(3, 0) = 0;					tM6(3, 1) = 0;					tM6(3, 2) = 0; tM6(3, 3) = 1;
+			for (int i = 0; i < 4; ++i)
+			{
+				for (int j = 0; j < 4; ++j)
+					dArr[i][j] = tM1(i, j);
+			}
+			tM = tM * tM1;
+		}
 
-		matrix tM7 = matrix(4, 4); //матрица перемещения (возврат)
-		tM7(0, 0) = 1;				tM7(0, 1) = 0;				tM7(0, 2) = 0;				tM7(0, 3) = 0;
-		tM7(1, 0) = 0;				tM7(1, 1) = 1;				tM7(1, 2) = 0;				tM7(1, 3) = 0;
-		tM7(2, 0) = 0;				tM7(2, 1) = 0;				tM7(2, 2) = 1;				tM7(2, 3) = 0;
-		tM7(3, 0) = axis(0, 0);		tM7(3, 1) = axis(0, 1);		tM7(3, 2) = axis(0, 2);		tM7(3, 3) = 1;
+		//матрица поворота отн-но Oy (содерж)
+		tM1(0, 0) = cos(angle);		tM1(0, 1) = 0;			tM1(0, 2) = -sin(angle);	tM1(0, 3) = 0;
+		tM1(1, 0) = 0;				tM1(1, 1) = 1;			tM1(1, 2) = 0;				tM1(1, 3) = 0;
+		tM1(2, 0) = sin(angle);		tM1(2, 1) = 0;			tM1(2, 2) = cos(angle);		tM1(2, 3) = 0;
+		tM1(3, 0) = 0;				tM1(3, 1) = 0;			tM1(3, 2) = 0;				tM1(3, 3) = 1;
 
-		return fig * tM1 * tM2 * tM3 * tM4 * tM5 * tM6;
+		for (int i = 0; i < 4; ++i)
+		{
+			for (int j = 0; j < 4; ++j)
+				dArr[i][j] = tM1(i, j);
+		}
+		tM = tM * tM1;
+
+		//матрица поворота отн-но Ox (возврат)
+		if (vec(0, 2) > 0.001 || vec(0, 2) < -0.001)
+		{
+			tM1(0, 0) = 1;			tM1(0, 1) = 0;				tM1(0, 2) = 0;				tM1(0, 3) = 0;
+			tM1(1, 0) = 0;			tM1(1, 1) = k;				tM1(1, 2) = vec(0, 2);		tM1(1, 3) = 0;
+			tM1(2, 0) = 0;			tM1(2, 1) = -vec(0, 2);		tM1(2, 2) = k;				tM1(2, 3) = 0;
+			tM1(3, 0) = 0;			tM1(3, 1) = 0;				tM1(3, 2) = 0;				tM1(3, 3) = 1;
+
+			for (int i = 0; i < 4; ++i)
+			{
+				for (int j = 0; j < 4; ++j)
+					dArr[i][j] = tM1(i, j);
+			}
+			tM = tM * tM1;
+		}
+
+		//матрица поворота отн-но Oz (возврат)
+		if (vec(0, 0) > 0.001 || vec(0, 0) < -0.001)
+		{
+			tM1(0, 0) = vec(0, 1) / k;		tM1(0, 1) = -vec(0, 0) / k;		tM1(0, 2) = 0; tM1(0, 3) = 0;
+			tM1(1, 0) = vec(0, 0) / k;		tM1(1, 1) = vec(0, 1) / k;		tM1(1, 2) = 0; tM1(1, 3) = 0;
+			tM1(2, 0) = 0;					tM1(2, 1) = 0;					tM1(2, 2) = 1; tM1(2, 3) = 0;
+			tM1(3, 0) = 0;					tM1(3, 1) = 0;					tM1(3, 2) = 0; tM1(3, 3) = 1;
+
+			for (int i = 0; i < 4; ++i)
+			{
+				for (int j = 0; j < 4; ++j)
+					dArr[i][j] = tM1(i, j);
+			}
+			tM = tM * tM1;
+		}
+
+		//матрица перемещения (возврат)
+		tM1(0, 0) = 1;				tM1(0, 1) = 0;				tM1(0, 2) = 0;				tM1(0, 3) = 0;
+		tM1(1, 0) = 0;				tM1(1, 1) = 1;				tM1(1, 2) = 0;				tM1(1, 3) = 0;
+		tM1(2, 0) = 0;				tM1(2, 1) = 0;				tM1(2, 2) = 1;				tM1(2, 3) = 0;
+		tM1(3, 0) = axis(0, 0);		tM1(3, 1) = axis(0, 1);		tM1(3, 2) = axis(0, 2);		tM1(3, 3) = 1;
+
+		for (int i = 0; i < 4; ++i)
+		{
+			for (int j = 0; j < 4; ++j)
+				dArr[i][j] = tM1(i, j);
+		}
+		tM = tM * tM1;
+
+		for (int i = 0; i < 4; ++i)
+		{
+			for (int j = 0; j < 4; ++j)
+				dArr[i][j] = tM(i, j);
+		}
+		return fig * tM;
 	}
 	else
 		return fig;
@@ -215,7 +288,6 @@ void create3DGrid(HDC hdc, coordDescr d, bool mode)
 	}
 }
 
-
 double roundPrec(double val, int prec)
 {
 	return round(val * pow(10, prec)) / pow(10, prec);
@@ -288,9 +360,9 @@ matrix operator*(const matrix& left, const matrix& right)
 	int strPos = 0;
 	for (int i = 0; i < m; ++i, strPos = 0)
 	{
-		for (int strPos = 0; strPos < n; ++strPos) //
+		for (int strPos = 0; strPos < n; ++strPos) 
 			for (int j = 0; j < nL; ++j)
-				res(i, strPos) += roundPrec(left.getElem(i, j) * right.getElem(j, strPos), 2);
+				res(i, strPos) += left.getElem(i, j) * right.getElem(j, strPos);
 	}
 	return res;
 }
@@ -302,11 +374,18 @@ matrix operator*(double left, const matrix& right)
 	matrix res(m, n);
 	for (int i = 0; i < m; ++i)
 		for (int j = 0; j < n; ++j)
-			res(i, j) = roundPrec(left * right.getElem(i, j), 2);
+			res(i, j) = roundTo(left * right.getElem(i, j), 3);
 	return res;
 }
 
 double* matrix::getStr(int m)
 {
 	return coef[m];
+}
+
+void matrix::round(int prec)
+{
+	for (int i = 0; i < m; ++i)
+		for (int j = 0; j < n; ++j)
+			coef[i][j] = roundPrec(coef[i][j], 3);
 }

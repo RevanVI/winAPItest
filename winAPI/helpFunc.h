@@ -20,6 +20,7 @@ public:
 	double getElem(int i, int j) const;
 
 	double* getStr(int m);
+	void round(int prec);
 
 	double& operator()(int, int);
 	matrix& operator=(const matrix& obj);

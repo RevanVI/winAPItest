@@ -140,14 +140,15 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	static bool mode;
 	static bool viewChange;
 	static bool sizeChange;
+	static bool shiftFig;
 	static double x0mod, y0mod;
 	static double hf, wf, df;
 	static double ohf, owf, odf;
+	static double shiftXf, shiftYf, shiftZf;
 	static coordDescr d;
 
 	int minC = 10, maxC = 60, defC = 40;
 	double minPos = 0.25, maxPos = 0.75, defPos = 0.5;
-	//int numX, numY, numZ, numXm, numYm, numZm;
 
 	static matrix fig(8, 4); 
 	static matrix fig1(8, 4);
@@ -167,6 +168,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		mode = true;
 		viewChange = false;
 		sizeChange = false;
+		shiftFig = false;
 		d.cy = 20;
 		d.cx = 20;
 
@@ -412,6 +414,9 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 							edit = &yfEdit;
 						if (LOWORD(wParam) == ID_EDITZF)
 							edit = &zfEdit;
+						if (LOWORD(wParam) == ID_EDITXF || LOWORD(wParam) == ID_EDITYF || LOWORD(wParam) == ID_EDITZF)
+							shiftFig = true;
+
 						if (LOWORD(wParam) == ID_EDITXA1)
 							edit = &xaEdit1;
 						if (LOWORD(wParam) == ID_EDITXA2)
@@ -426,7 +431,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 							edit = &zaEdit2;
 						size = SendMessage(*edit, EM_GETLINE, 0, (LPARAM)buf);
 						double val = wcstod(buf, NULL);
-						if (size == 0 || val < 0)
+						if (size == 0)
 						{
 							val = round(1 * pow(10, 3)) / pow(10, 3);
 							wstring str = to_wstring(val).substr(0, 4);
@@ -445,27 +450,16 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 					{
 						
 						if (LOWORD(wParam) == ID_EDITH)
-						{
 							edit = &hEdit;
-							check = &xfEdit;
-						}
 						if (LOWORD(wParam) == ID_EDITW)
-						{
 							edit = &wEdit;
-							check = &yfEdit;
-						}
 						if (LOWORD(wParam) == ID_EDITD)
-						{
 							edit = &dEdit;
-							check = &zfEdit;
-						}
 						size = SendMessage(*edit, EM_GETLINE, 0, (LPARAM)buf);
 						double val = wcstod(buf, NULL);
-						SendMessage(*check, EM_GETLINE, 0, (LPARAM)buf);
-						double valCh = wcstod(buf, NULL);
-						if (size == 0 || val == valCh)
+						if (size == 0 || val <= 0.01)
 						{
-							val = round((valCh + 4) * pow(10, 3)) / pow(10, 3);
+							val = round(4 * pow(10, 3)) / pow(10, 3);
 							wstring str = to_wstring(val).substr(0, 4);
 							SetWindowText(*edit, str.c_str());
 						}
@@ -488,11 +482,11 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 					y0mod = wcstod(buf, NULL);
 
 					SendMessage(xfEdit, EM_GETLINE, 0, (LPARAM)buf);
-					fig1(0, 0) = wcstod(buf, NULL);
+					shiftXf = wcstod(buf, NULL) - fig1(0, 0);
 					SendMessage(yfEdit, EM_GETLINE, 0, (LPARAM)buf);
-					fig1(0, 1) = wcstod(buf, NULL);
+					shiftYf = wcstod(buf, NULL) - fig1(0, 1);
 					SendMessage(zfEdit, EM_GETLINE, 0, (LPARAM)buf);
-					fig1(0, 2) = wcstod(buf, NULL);
+					shiftZf = wcstod(buf, NULL) - fig1(0, 2);
 
 					SendMessage(xaEdit1, EM_GETLINE, 0, (LPARAM)buf);
 					axis(0, 0) = wcstod(buf, NULL);
@@ -544,15 +538,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			d.x0 = (d.r - d.l) * x0mod + d.l;
 			d.y0 = (d.b - d.t) * y0mod + d.t;
 
-
-			/*
-			fig1(1, 0) = fig1(5, 0);			fig1(1, 1) = fig1(0, 1);			fig1(1, 2) = fig1(0, 2);		 fig1(1, 3) = 1;
-			fig1(2, 0) = fig1(5, 0);			fig1(2, 1) = fig1(0, 1);			fig1(2, 2) = fig1(5, 2);		 fig1(2, 3) = 1;
-			fig1(3, 0) = fig1(0, 0);			fig1(3, 1) = fig1(0, 1);			fig1(3, 2) = fig1(5, 2);		 fig1(3, 3) = 1;
-			fig1(4, 0) = fig1(0, 0);			fig1(4, 1) = fig1(5, 1);			fig1(4, 2) = fig1(5, 2);		 fig1(4, 3) = 1;
-			fig1(6, 0) = fig1(5, 0);			fig1(6, 1) = fig1(5, 1);			fig1(6, 2) = fig1(0, 2);		 fig1(6, 3) = 1;
-			fig1(7, 0) = fig1(0, 0);			fig1(7, 1) = fig1(5, 1);		    fig1(7, 2) = fig1(0, 2);		 fig1(7, 3) = 1;
-			*/
 			double dArr[8][4];
 			for (int i = 0; i < 8; ++i)
 			{
@@ -560,20 +545,20 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 					dArr[i][j] = fig1(i, j);
 			}
 
-			matrix dim(4, 4);
-			dim(0, 0) = 0.925;  dim(0, 1) = -0.134;  dim(0, 2) = 0; dim(0, 3) = 0;
-			dim(1, 0) = 0;      dim(1, 1) = 0.935;   dim(1, 2) = 0; dim(1, 3) = 0;
-			dim(2, 0) = -0.378; dim(2, 1) = -0.327;  dim(2, 2) = 0; dim(2, 3) = 0;
-			dim(3, 0) = 0;      dim(3, 1) = 0;       dim(3, 2) = 0; dim(3, 3) = 1;
-
-			matrix iso(4, 4);
-			iso(0, 0) = 0.707;  iso(0, 1) = -0.408;  iso(0, 2) = 0; iso(0, 3) = 0;
-			iso(1, 0) = 0;      iso(1, 1) = 0.816;   iso(1, 2) = 0; iso(1, 3) = 0;
-			iso(2, 0) = -0.707; iso(2, 1) = -0.408;  iso(2, 2) = 0; iso(2, 3) = 0;
-			iso(3, 0) = 0;      iso(3, 1) = 0;       iso(3, 2) = 0; iso(3, 3) = 1;
-
-
 			create3DGrid(hdc, d, mode);
+
+			if (shiftFig)
+			{
+				for (int i = 0; i < 8; ++i)
+				{
+					fig1(i, 0) = fig1(i, 0) + shiftXf;
+					fig1(i, 1) = fig1(i, 1) + shiftYf;
+					fig1(i, 2) = fig1(i, 2) + shiftZf;
+				}
+				shiftXf = shiftYf = shiftZf = 0.0;
+				shiftFig = false;
+			}
+
 			if (!viewChange)
 			{
 				if (sizeChange)
@@ -583,7 +568,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 					sChange(1, 0) = 0;		    sChange(1, 1) = hf / ohf;   sChange(1, 2) = 0;			sChange(1, 3) = 0;
 					sChange(2, 0) = 0;		    sChange(2, 1) = 0;			sChange(2, 2) = df / odf;	sChange(2, 3) = 0;
 					sChange(3, 0) = 0;			sChange(3, 1) = 0;			sChange(3, 2) = 0;			sChange(3, 3) = 1;
-
 
 					fig1 = fig1 * sChange;
 					sizeChange = false;
@@ -601,11 +585,23 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			matrix figDraw(8, 4);
 			if (mode)
 			{
+				matrix iso(4, 4);
+				iso(0, 0) = 0.707;  iso(0, 1) = -0.408;  iso(0, 2) = 0; iso(0, 3) = 0;
+				iso(1, 0) = 0;      iso(1, 1) = 0.816;   iso(1, 2) = 0; iso(1, 3) = 0;
+				iso(2, 0) = -0.707; iso(2, 1) = -0.408;  iso(2, 2) = 0; iso(2, 3) = 0;
+				iso(3, 0) = 0;      iso(3, 1) = 0;       iso(3, 2) = 0; iso(3, 3) = 1;
+
 				figDraw = fig1 * iso;
 				axis1 = axis * iso;
 			}
 			else
 			{
+				matrix dim(4, 4);
+				dim(0, 0) = 0.925;  dim(0, 1) = -0.134;  dim(0, 2) = 0; dim(0, 3) = 0;
+				dim(1, 0) = 0;      dim(1, 1) = 0.935;   dim(1, 2) = 0; dim(1, 3) = 0;
+				dim(2, 0) = -0.378; dim(2, 1) = -0.327;  dim(2, 2) = 0; dim(2, 3) = 0;
+				dim(3, 0) = 0;      dim(3, 1) = 0;       dim(3, 2) = 0; dim(3, 3) = 1;
+
 				figDraw = fig1 * dim;
 				axis1 = axis * dim;
 			}
