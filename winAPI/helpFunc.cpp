@@ -395,9 +395,39 @@ void matrix::round(int prec)
 			coef[i][j] = roundPrec(coef[i][j], 3);
 }
 
-void matrix::reverse()
+matrix matrix::reverse()
 {
+	if (m != n)
+		return matrix(0, 0);
+	double det = this->determ();
+	matrix rev_matr(m, n);
 
+	for (int i = 0; i < n; i++) 
+	{
+		for (int j = 0; j < n; j++) 
+		{
+			matrix temp_matr = this->strikeout(i , j);
+			rev_matr(i, j) = pow(-1.0, i + j + 2) * temp_matr.determ() / det;
+		}
+
+
+	}
+	rev_matr.transport();
+	return rev_matr;
+}
+
+void matrix::transport()
+{
+	if (m != n)
+		return;
+	double buf;
+	for (int i = 0; i < m; ++i)
+		for (int j = i + 1; j < n; ++j)
+		{
+			buf = coef[i][j];
+			coef[i][j] = coef[j][i];
+			coef[j][i] = buf;
+		}
 }
 
 double matrix::determ()

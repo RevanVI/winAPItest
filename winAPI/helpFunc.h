@@ -21,9 +21,10 @@ public:
 
 	double* getStr(int m);
 	void round(int prec);
-	void reverse();
+	matrix reverse();
 	double determ();
 	matrix strikeout(int m, int n);
+	void transport();
 
 	double& operator()(int, int);
 	matrix& operator=(const matrix& obj);

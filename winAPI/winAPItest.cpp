@@ -172,6 +172,25 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		d.cy = 20;
 		d.cx = 20;
 
+		matrix test(4, 4);
+		test(0, 0) = 6; test(0, 1) = -5; test(0, 2) = 8; test(0, 3) = 4;
+		test(1, 0) = 9; test(1, 1) = 7; test(1, 2) = 5; test(1, 3) = 2;
+		test(2, 0) = 7; test(2, 1) = 5; test(2, 2) = 3; test(2, 3) = 7;
+		test(3, 0) = -4; test(3, 1) = 8; test(3, 2) = -8; test(3, 3) = -3;
+
+		double det = test.determ();
+
+		test = test.reverse();
+		double dArr[4][4];
+		for (int i = 0; i < 4; ++i)
+		{
+			for (int j = 0; j < 4; ++j)
+				dArr[i][j] = test(i, j);
+		}
+
+		int val= 0;
+		++val;
+		/*
 		fig(0, 0) = 0;					fig(0, 1) = 0;					fig(0, 2) = 0;				 fig(0, 3) = 1;
 		fig(5, 0) = 4;					fig(5, 1) = 4;					fig(5, 2) = 4;				 fig(5, 3) = 1;
 
@@ -309,10 +328,12 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		y += 4 * 0.04 * rcWnd.bottom;
 		but1 = CreateWindow(L"button", L"Выполнить", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 			x + 0.1 * rcWnd.right, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_BUT1, hInst, NULL);
+		*/
 		}
 		break;
     case WM_COMMAND:
 		{
+		/*
 			TCHAR buf[10];
 			int size;
 			switch (LOWORD(wParam))
@@ -524,10 +545,12 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				}
 				break;
 			}
+			*/
 		}
 		break;
 	case WM_PAINT:
 		{
+		/*
 			PAINTSTRUCT ps;
 			HDC hdc = BeginPaint(hWnd, &ps);
 
@@ -632,7 +655,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			val = round(val * pow(10, prec)) / pow(10, prec);
 			str = to_wstring(val).substr(0, len);
 			SetWindowText(zfEdit, str.c_str());
-
+			*/
 		}
 		break;
 	case WM_SIZE:
