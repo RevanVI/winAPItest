@@ -293,6 +293,11 @@ double roundPrec(double val, int prec)
 	return round(val * pow(10, prec)) / pow(10, prec);
 }
 
+
+
+
+
+
 matrix::matrix(int m, int n)
 {
 	coef = new double*[m];
@@ -388,4 +393,52 @@ void matrix::round(int prec)
 	for (int i = 0; i < m; ++i)
 		for (int j = 0; j < n; ++j)
 			coef[i][j] = roundPrec(coef[i][j], 3);
+}
+
+void matrix::reverse()
+{
+
+}
+
+double matrix::determ()
+{
+	if (m != n)
+		return 0;
+
+	int detVal = 0;   //временная переменная для хранения определителя
+	int k = 1;      //степень
+
+	if (n == 1)
+		detVal = coef[0][0];
+	else if (n == 2)
+		detVal = coef[0][0] * coef[1][1] - coef[1][0] * coef[0][1];
+	else {
+		for (int i = 0; i < n; i++) {
+			int m = n - 1;
+			matrix temp_matr = this->strikeout(0, i);
+			detVal = detVal + k * coef[0][i] * temp_matr.determ();
+			k = -k;
+		}
+	}
+	return detVal;
+}
+
+matrix matrix::strikeout(int r, int c)
+{
+	matrix res(m - 1, n - 1);
+	int ki = 0;
+	for (int i = 0; i < m; ++i) 
+	{
+		if (i != r) 
+		{
+			for (int j = 0, kj = 0; j < n; ++j) 
+				if (j != c) 
+				{
+					res(ki, kj) = coef[i][j];
+					kj++;
+				}
+			ki++;
+		}
+	}
+	return res;
 }
