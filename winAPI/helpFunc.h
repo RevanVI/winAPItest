@@ -19,18 +19,20 @@ public:
 	void getDimens(int& m, int& n) const;
 	double getElem(int i, int j) const;
 
-	double* getStr(int m);
+	matrix getStr(int m);
 	void round(int prec);
 	matrix reverse();
 	double determ();
 	matrix strikeout(int m, int n);
 	void transport();
+	void fill(double val);
 
 	double& operator()(int, int);
 	matrix& operator=(const matrix& obj);
 	friend matrix operator*(const matrix&, const matrix&);
 	friend matrix operator*(double, const matrix&);
-	
+	friend matrix operator-(matrix&, matrix&);
+	friend matrix operator+(matrix&, matrix&);
 };
 
 bool drawLine(HDC hdc, double x0, double y0, double x, double y, coordDescr d);
@@ -40,3 +42,4 @@ bool drawBrickDim(HDC hdc, matrix fig, coordDescr d, COLORREF color);
 matrix rotateFig(matrix fig, matrix axis, double angle);
 void create2DGrid(HDC hdc, coordDescr d);
 void create3DGrid(HDC hdc, coordDescr d, bool mode); // mode = true - isometric, mode = false - dim
+matrix chordAppr(matrix points);

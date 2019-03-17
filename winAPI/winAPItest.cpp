@@ -155,6 +155,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 
 	static matrix axis(2, 4); //ось поворота
 
+	static matrix dots(4 * 4, 2);
 	static double angle; //угол поворота
     switch (message)
     {
@@ -169,25 +170,90 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		viewChange = false;
 		sizeChange = false;
 		shiftFig = false;
-		d.cy = 20;
-		d.cx = 20;
+		d.cy = 80;
+		d.cx = 80;
 
-		matrix test(4, 4);
-		test(0, 0) = 6; test(0, 1) = -5; test(0, 2) = 8; test(0, 3) = 4;
-		test(1, 0) = 9; test(1, 1) = 7; test(1, 2) = 5; test(1, 3) = 2;
-		test(2, 0) = 7; test(2, 1) = 5; test(2, 2) = 3; test(2, 3) = 7;
-		test(3, 0) = -4; test(3, 1) = 8; test(3, 2) = -8; test(3, 3) = -3;
+		int m, n;
+		m = 4;
+		n = 2;
+		matrix test(m, n);
+		test(0, 0) = 0;		test(0, 1) = 0;		//test(0, 2) = 1;
+		test(1, 0) = 1;		test(1, 1) = 1;		//test(1, 2) = 1;
+		test(2, 0) = 2;		test(2, 1) = -1;	//test(2, 2) = 1;
+		test(3, 0) = 3;		test(3, 1) = 0;		//test(3, 2) = 1; 
 
-		double det = test.determ();
+		matrix p1(m, n);
+		p1.fill(1);
 
-		test = test.reverse();
-		double dArr[4][4];
-		for (int i = 0; i < 4; ++i)
+		matrix t = chordAppr(test);
+		t.round(3);
+
+		matrix M(m, m);
+		M.fill(0);
+		for (int i = 1; i < m - 1; ++i)
 		{
-			for (int j = 0; j < 4; ++j)
-				dArr[i][j] = test(i, j);
+			M(i, i - 1) = t(0, i);
+			M(i, i) = 2 * (t(0, i - 1) + t(0, i));
+			M(i, i + 1) = t(0, i - 1);
+		}
+		M(0, 0) = 1;
+		M(m - 1, m - 1) = 1;
+
+		M.round(3);
+
+		M = M.reverse();
+
+		matrix R(m, n);
+		for (int i = 1; i < m - 1; ++i)
+			for (int j = 0; j < n; ++j)
+				R(i, j) = (3 / t(0, i - 1) / t(0, i)) * (pow(t(0, i - 1), 2) * (test(i + 1, j) - test(i, j)) + pow(t(0, i), 2) * (test(i , j) - test(i - 1, j)));
+		R(0, 0) = p1(0, 0);		R(0, 1) = p1(0, 1);
+		R(m - 1, 0) = p1(m - 1, 0); R(m - 1, 1) = p1(m - 1, 1);
+
+		p1 = M * R;
+		p1.round(3);
+
+		int tauC = 4;
+		matrix tau(1, tauC);
+		tau(0, 0) = 1.0 / 5;
+		tau(0, 1) = 2.0 / 5;
+		tau(0, 2) = 3.0 / 5;
+		tau(0, 3) = 4.0 / 5;
+
+		for (int i = 1; i < (m ); ++i)
+		{
+			for (int tauNum = 0; tauNum < tauC; ++tauNum)
+			{
+				double val;
+				matrix buf(1, 4);
+				buf(0, 0) = 2 * pow(tau(0, tauNum), 3) - 3 * pow(tau(0, tauNum), 2) + 1;
+				buf(0, 1) = -2 * pow(tau(0, tauNum), 3) + 3 * pow(tau(0, tauNum), 2);
+				buf(0, 2) = tau(0, tauNum) * (pow(tau(0, tauNum), 2) - 2 * tau(0, tauNum) + 1) * t(0, i - 1);
+				buf(0, 3) = tau(0, tauNum) * (pow(tau(0, tauNum), 2) - tau(0, tauNum)) * t(0, i - 1);
+
+				matrix G(4, n);
+				G(0, 0) = test(i - 1, 0);			G(0, 1) = test(i - 1, 1);
+				G(1, 0) = test(i, 0);				G(1, 1) = test(i, 1);
+				G(2, 0) = p1(i - 1, 0);				G(2, 1) = p1(i -1, 1);
+				G(3, 0) = p1(i , 0);				G(3, 1) = p1(i, 1);
+
+				matrix ps = buf * G;
+				for (int j = 0; j < n; ++j)
+					dots((i - 1) * tauC + 1 + tauNum, j) = ps(0, j);
+			}
+		}
+		for (int i = 0; i < n; ++i)
+		{
+			dots(0, i) = test(0, i);
+			dots(m * tauC - 1, i) = test(m - 1, i);
 		}
 
+		double dArr[8][2];
+		for (int i = 0; i < 8; ++i)
+		{
+			for (int j = 0; j < 2; ++j)
+				dArr[i][j] = dots(i, j);
+		}
 		int val= 0;
 		++val;
 		/*
@@ -550,6 +616,19 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		break;
 	case WM_PAINT:
 		{
+		PAINTSTRUCT ps;
+		HDC hdc = BeginPaint(hWnd, &ps);
+
+		d.l = xClient / 20;
+		d.r = 0.6 * xClient;
+		d.t = yClient / 20;
+		d.b = yClient - d.t;
+		d.x0 = (d.r - d.l) * x0mod + d.l;
+		d.y0 = (d.b - d.t) * y0mod + d.t;
+
+
+		create2DGrid(hdc, d);
+		drawPol2Dim(hdc, dots, RGB(0, 0, 0), d);
 		/*
 			PAINTSTRUCT ps;
 			HDC hdc = BeginPaint(hWnd, &ps);

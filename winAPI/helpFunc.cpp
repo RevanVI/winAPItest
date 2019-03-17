@@ -6,6 +6,11 @@ double roundTo(double val, int prec)
 	return round(val * pow(10, prec)) / pow(10, prec);
 }
 
+double roundPrec(double val, int prec)
+{
+	return round(val * pow(10, prec)) / pow(10, prec);
+}
+
 bool drawLine(HDC hdc, double x0, double y0, double x, double y, coordDescr d)
 {
 	POINT pt;
@@ -46,6 +51,122 @@ bool drawBrickDim(HDC hdc, matrix fig, coordDescr d, COLORREF color)
 	drawLine(hdc, fig(6, 0), fig(6, 1), fig(7, 0), fig(7, 1), d); //67
 	return true;
 }
+
+
+void create2DGrid(HDC hdc, coordDescr d)
+{
+	drawLine(hdc, d.l, d.t, d.r, d.t);
+	drawLine(hdc, d.r, d.t, d.r, d.b);
+	drawLine(hdc, d.r, d.b, d.l, d.b);
+	drawLine(hdc, d.l, d.b, d.l, d.t);
+
+	HPEN hPen = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
+	HPEN oPen = (HPEN)SelectObject(hdc, hPen);
+	drawLine(hdc, d.l, d.y0, d.r, d.y0); //ось Ох
+	drawLine(hdc, d.x0, d.t, d.x0, d.b); //ось Оу
+
+	SelectObject(hdc, oPen);
+	DeleteObject(hPen);
+	int num = (d.r - d.x0) / d.cx; //количество делений справа
+	for (int i = 0; i < num; ++i)
+		drawLine(hdc, d.x0 + d.cx * i, d.y0 - 2, d.x0 + d.cx * i, d.y0 + 2);
+	num = (d.x0 - d.l) / d.cx; //количество делений слева
+	for (int i = 0; i < num; ++i)
+		drawLine(hdc, d.x0 - d.cx * i, d.y0 - 2, d.x0 - d.cx * i, d.y0 + 2);
+	num = (d.y0 - d.t) / d.cy; //количество делений сверху
+	for (int i = 0; i < num; ++i)
+		drawLine(hdc, d.x0 - 2, d.y0 - d.cy * i, d.x0 + 2, d.y0 - d.cy * i);
+	num = (d.b - d.y0) / d.cy; //количество делений снизу
+	for (int i = 0; i < num; ++i)
+		drawLine(hdc, d.x0 - 2, d.y0 + d.cy * i, d.x0 + 2, d.y0 + d.cy * i);
+}
+
+void create3DGrid(HDC hdc, coordDescr d, bool mode)
+{
+	drawLine(hdc, d.l, d.t, d.r, d.t);
+	drawLine(hdc, d.r, d.t, d.r, d.b);
+	drawLine(hdc, d.r, d.b, d.l, d.b);
+	drawLine(hdc, d.l, d.b, d.l, d.t);
+
+	HPEN hPen = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
+	HPEN oPen = (HPEN)SelectObject(hdc, hPen);
+
+	matrix dim(4, 4);
+
+	if (mode == false) //dim
+	{
+		dim(0, 0) = 0.925;  dim(0, 1) = -0.134;  dim(0, 2) = 0; dim(0, 3) = 0;
+		dim(1, 0) = 0;      dim(1, 1) = 0.935;   dim(1, 2) = 0; dim(1, 3) = 0;
+		dim(2, 0) = -0.378; dim(2, 1) = -0.327;  dim(2, 2) = 0; dim(2, 3) = 0;
+		dim(3, 0) = 0;      dim(3, 1) = 0;       dim(3, 2) = 0; dim(3, 3) = 1;
+	}
+	else //iso
+	{
+		dim(0, 0) = 0.707;  dim(0, 1) = -0.408;  dim(0, 2) = 0; dim(0, 3) = 0;
+		dim(1, 0) = 0;      dim(1, 1) = 0.816;   dim(1, 2) = 0; dim(1, 3) = 0;
+		dim(2, 0) = -0.707; dim(2, 1) = -0.408;  dim(2, 2) = 0; dim(2, 3) = 0;
+		dim(3, 0) = 0;      dim(3, 1) = 0;       dim(3, 2) = 0; dim(3, 3) = 1;
+	}
+
+	int num = (d.r - d.x0) / d.cx;
+	matrix oX(2, 4);
+	oX(0, 0) = 0; oX(0, 1) = 0; oX(0, 2) = 0; oX(0, 3) = 1;
+	oX(1, 0) = num; oX(1, 1) = 0; oX(1, 2) = 0; oX(1, 3) = 1;
+	oX = oX * dim;
+
+	matrix oZ(2, 4);
+	oZ(0, 0) = 0; oZ(0, 1) = 0; oZ(0, 2) = 0; oZ(0, 3) = 1;
+	oZ(1, 0) = 0; oZ(1, 1) = 0; oZ(1, 2) = num; oZ(1, 3) = 1;
+	oZ = oZ * dim;
+
+	num = (d.y0 - d.t) / d.cy;
+	drawLine(hdc, d.x0, d.y0, d.x0, d.y0 - d.cy * num); //ось Оy
+	drawLine(hdc, oX(0, 0) * d.cx + d.x0, -oX(0, 1) * d.cy + d.y0, oX(1, 0) * d.cx + d.x0, -oX(1, 1) * d.cy + d.y0); //ось Оx
+	drawLine(hdc, oZ(0, 0) * d.cx + d.x0, -oZ(0, 1) * d.cy + d.y0, oZ(1, 0) * d.cx + d.x0, -oZ(1, 1) * d.cy + d.y0); //ось Оz
+
+	SelectObject(hdc, oPen);
+	DeleteObject(hPen);
+
+	//ось Ох
+	num = (d.r - d.x0) / d.cx; 
+	matrix buf(2, 4);
+	matrix step(1, 4);
+	for (int j = 0; j < 3; ++j)
+	{
+		if (j == 0) //Ox
+		{
+			num = (d.r - d.x0) / d.cx;
+			buf(0, 0) = 1; buf(0, 1) = -0.3; buf(0, 2) = 0; buf(0, 3) = 1;
+			buf(1, 0) = 1; buf(1, 1) = 0.3;  buf(1, 2) = 0; buf(0, 3) = 1;
+			step(0, 0) = 1; step(0, 1) = 0; step(0, 2) = 0; step(0, 3) = 1;
+		}
+		else if (j == 1) //Oz
+		{
+			buf(0, 0) = 0; buf(0, 1) = -0.3; buf(0, 2) = 1; buf(0, 3) = 1;
+			buf(1, 0) = 0; buf(1, 1) = 0.3;  buf(1, 2) = 1; buf(0, 3) = 1;
+			step(0, 0) = 0; step(0, 1) = 0; step(0, 2) = 1; step(0, 3) = 1;
+		}
+		else //Oy
+		{
+			buf(0, 0) = -0.3; buf(0, 1) = 1; buf(0, 2) = 0; buf(0, 3) = 1;
+			buf(1, 0) = 0.3;  buf(1, 1) = 1;  buf(1, 2) = 0; buf(0, 3) = 1;
+			step(0, 0) = 0; step(0, 1) = 1; step(0, 2) = 0; step(0, 3) = 1;
+		}
+
+		buf = buf * dim;
+		step = step * dim;
+		for (int i = 1; i < num - 1; ++i)
+		{
+			drawLine(hdc, buf(0, 0), buf(0, 1), buf(1, 0), buf(1, 1), d);
+			buf(0, 0) += step(0, 0);
+			buf(1, 0) += step(0, 0);
+			buf(0, 1) += step(0, 1);
+			buf(1, 1) += step(0, 1);
+		}
+	}
+}
+
+
 
 matrix rotateFig(matrix fig, matrix axis, double angle)
 {
@@ -175,128 +296,26 @@ matrix rotateFig(matrix fig, matrix axis, double angle)
 		return fig;
 }
 
-void create2DGrid(HDC hdc, coordDescr d)
+
+
+//Lab2
+matrix chordAppr(matrix points)
 {
-	drawLine(hdc, d.l, d.t, d.r, d.t);
-	drawLine(hdc, d.r, d.t, d.r, d.b);
-	drawLine(hdc, d.r, d.b, d.l, d.b);
-	drawLine(hdc, d.l, d.b, d.l, d.t);
+	int m, n;
+	points.getDimens(m, n);
 
-	HPEN hPen = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
-	HPEN oPen = (HPEN)SelectObject(hdc, hPen);
-	drawLine(hdc, d.l, d.y0, d.r, d.y0); //ось Ох
-	drawLine(hdc, d.x0, d.t, d.x0, d.b); //ось Оу
-
-	SelectObject(hdc, oPen);
-	DeleteObject(hPen);
-	int num = (d.r - d.x0) / d.cx; //количество делений справа
-	for (int i = 0; i < num; ++i)
-		drawLine(hdc, d.x0 + d.cx * i, d.y0 - 2, d.x0 + d.cx * i, d.y0 + 2);
-	num = (d.x0 - d.l) / d.cx; //количество делений слева
-	for (int i = 0; i < num; ++i)
-		drawLine(hdc, d.x0 - d.cx * i, d.y0 - 2, d.x0 - d.cx * i, d.y0 + 2);
-	num = (d.y0 - d.t) / d.cy; //количество делений сверху
-	for (int i = 0; i < num; ++i)
-		drawLine(hdc, d.x0 - 2, d.y0 - d.cy * i, d.x0 + 2, d.y0 - d.cy * i);
-	num = (d.b - d.y0) / d.cy; //количество делений снизу
-	for (int i = 0; i < num; ++i)
-		drawLine(hdc, d.x0 - 2, d.y0 + d.cy * i, d.x0 + 2, d.y0 + d.cy * i);
+	matrix res(1, m - 1);
+	res.fill(0);
+	for (int i = 1; i < m; ++i)
+	{
+		for (int j = 0; j < n; ++j)//n - 1 тк однородные координаты
+			res(0, i - 1) = res(0, i - 1) + pow(points(i, j) - points(i - 1, j), 2);
+		res(0, i - 1) = sqrt(res(0, i - 1));
+	}
+	return res;
 }
 
-void create3DGrid(HDC hdc, coordDescr d, bool mode)
-{
-	drawLine(hdc, d.l, d.t, d.r, d.t);
-	drawLine(hdc, d.r, d.t, d.r, d.b);
-	drawLine(hdc, d.r, d.b, d.l, d.b);
-	drawLine(hdc, d.l, d.b, d.l, d.t);
-
-	HPEN hPen = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
-	HPEN oPen = (HPEN)SelectObject(hdc, hPen);
-
-	matrix dim(4, 4);
-
-	if (mode == false) //dim
-	{
-		dim(0, 0) = 0.925;  dim(0, 1) = -0.134;  dim(0, 2) = 0; dim(0, 3) = 0;
-		dim(1, 0) = 0;      dim(1, 1) = 0.935;   dim(1, 2) = 0; dim(1, 3) = 0;
-		dim(2, 0) = -0.378; dim(2, 1) = -0.327;  dim(2, 2) = 0; dim(2, 3) = 0;
-		dim(3, 0) = 0;      dim(3, 1) = 0;       dim(3, 2) = 0; dim(3, 3) = 1;
-	}
-	else //iso
-	{
-		dim(0, 0) = 0.707;  dim(0, 1) = -0.408;  dim(0, 2) = 0; dim(0, 3) = 0;
-		dim(1, 0) = 0;      dim(1, 1) = 0.816;   dim(1, 2) = 0; dim(1, 3) = 0;
-		dim(2, 0) = -0.707; dim(2, 1) = -0.408;  dim(2, 2) = 0; dim(2, 3) = 0;
-		dim(3, 0) = 0;      dim(3, 1) = 0;       dim(3, 2) = 0; dim(3, 3) = 1;
-	}
-
-	int num = (d.r - d.x0) / d.cx;
-	matrix oX(2, 4);
-	oX(0, 0) = 0; oX(0, 1) = 0; oX(0, 2) = 0; oX(0, 3) = 1;
-	oX(1, 0) = num; oX(1, 1) = 0; oX(1, 2) = 0; oX(1, 3) = 1;
-	oX = oX * dim;
-
-	matrix oZ(2, 4);
-	oZ(0, 0) = 0; oZ(0, 1) = 0; oZ(0, 2) = 0; oZ(0, 3) = 1;
-	oZ(1, 0) = 0; oZ(1, 1) = 0; oZ(1, 2) = num; oZ(1, 3) = 1;
-	oZ = oZ * dim;
-
-	num = (d.y0 - d.t) / d.cy;
-	drawLine(hdc, d.x0, d.y0, d.x0, d.y0 - d.cy * num); //ось Оy
-	drawLine(hdc, oX(0, 0) * d.cx + d.x0, -oX(0, 1) * d.cy + d.y0, oX(1, 0) * d.cx + d.x0, -oX(1, 1) * d.cy + d.y0); //ось Оx
-	drawLine(hdc, oZ(0, 0) * d.cx + d.x0, -oZ(0, 1) * d.cy + d.y0, oZ(1, 0) * d.cx + d.x0, -oZ(1, 1) * d.cy + d.y0); //ось Оz
-
-	SelectObject(hdc, oPen);
-	DeleteObject(hPen);
-
-	//ось Ох
-	num = (d.r - d.x0) / d.cx; 
-	matrix buf(2, 4);
-	matrix step(1, 4);
-	for (int j = 0; j < 3; ++j)
-	{
-		if (j == 0) //Ox
-		{
-			num = (d.r - d.x0) / d.cx;
-			buf(0, 0) = 1; buf(0, 1) = -0.3; buf(0, 2) = 0; buf(0, 3) = 1;
-			buf(1, 0) = 1; buf(1, 1) = 0.3;  buf(1, 2) = 0; buf(0, 3) = 1;
-			step(0, 0) = 1; step(0, 1) = 0; step(0, 2) = 0; step(0, 3) = 1;
-		}
-		else if (j == 1) //Oz
-		{
-			buf(0, 0) = 0; buf(0, 1) = -0.3; buf(0, 2) = 1; buf(0, 3) = 1;
-			buf(1, 0) = 0; buf(1, 1) = 0.3;  buf(1, 2) = 1; buf(0, 3) = 1;
-			step(0, 0) = 0; step(0, 1) = 0; step(0, 2) = 1; step(0, 3) = 1;
-		}
-		else //Oy
-		{
-			buf(0, 0) = -0.3; buf(0, 1) = 1; buf(0, 2) = 0; buf(0, 3) = 1;
-			buf(1, 0) = 0.3;  buf(1, 1) = 1;  buf(1, 2) = 0; buf(0, 3) = 1;
-			step(0, 0) = 0; step(0, 1) = 1; step(0, 2) = 0; step(0, 3) = 1;
-		}
-
-		buf = buf * dim;
-		step = step * dim;
-		for (int i = 1; i < num - 1; ++i)
-		{
-			drawLine(hdc, buf(0, 0), buf(0, 1), buf(1, 0), buf(1, 1), d);
-			buf(0, 0) += step(0, 0);
-			buf(1, 0) += step(0, 0);
-			buf(0, 1) += step(0, 1);
-			buf(1, 1) += step(0, 1);
-		}
-	}
-}
-
-double roundPrec(double val, int prec)
-{
-	return round(val * pow(10, prec)) / pow(10, prec);
-}
-
-
-
-
-
+//Matrix operations
 
 matrix::matrix(int m, int n)
 {
@@ -359,13 +378,11 @@ matrix operator*(const matrix& left, const matrix& right)
 	int m = mL,
 		n = nR;
 	matrix res(m, n);
+	res.fill(0);
+	
 	for (int i = 0; i < m; ++i)
-		for (int j = 0; j < n; ++j)
-			res(i, j) = 0;
-	int strPos = 0;
-	for (int i = 0; i < m; ++i, strPos = 0)
 	{
-		for (int strPos = 0; strPos < n; ++strPos) 
+		for (int strPos = 0; strPos < n; ++strPos)
 			for (int j = 0; j < nL; ++j)
 				res(i, strPos) += left.getElem(i, j) * right.getElem(j, strPos);
 	}
@@ -383,9 +400,12 @@ matrix operator*(double left, const matrix& right)
 	return res;
 }
 
-double* matrix::getStr(int m)
+matrix matrix::getStr(int m)
 {
-	return coef[m];
+	matrix res(1, n);
+	for (int i = 0; i < n; ++i)
+		res(0, i) = coef[m][i];
+	return res;
 }
 
 void matrix::round(int prec)
@@ -395,11 +415,18 @@ void matrix::round(int prec)
 			coef[i][j] = roundPrec(coef[i][j], 3);
 }
 
+void matrix::fill(double val)
+{
+	for (int i = 0; i < m; ++i)
+		for (int j = 0; j < n; ++j)
+			coef[i][j] = val;
+}
+
 matrix matrix::reverse()
 {
 	if (m != n)
 		return matrix(0, 0);
-	double det = this->determ();
+	double det = roundTo(this->determ(), 3);
 	matrix rev_matr(m, n);
 
 	for (int i = 0; i < n; i++) 
@@ -407,7 +434,9 @@ matrix matrix::reverse()
 		for (int j = 0; j < n; j++) 
 		{
 			matrix temp_matr = this->strikeout(i , j);
-			rev_matr(i, j) = pow(-1.0, i + j + 2) * temp_matr.determ() / det;
+			double tempDet = temp_matr.determ();
+			double val = temp_matr.determ() / det;
+			rev_matr(i, j) = pow(-1.0, i + j + 2) * roundTo(val, 3);
 		}
 
 
@@ -435,7 +464,7 @@ double matrix::determ()
 	if (m != n)
 		return 0;
 
-	int detVal = 0;   //временная переменная для хранения определителя
+	double detVal = 0;   //временная переменная для хранения определителя
 	int k = 1;      //степень
 
 	if (n == 1)
@@ -470,5 +499,34 @@ matrix matrix::strikeout(int r, int c)
 			ki++;
 		}
 	}
+	return res;
+}
+
+matrix operator-(matrix& l, matrix& r)
+{
+	int ml, nl, mr, nr;
+	l.getDimens(ml, nl);
+	r.getDimens(mr, nr);
+
+	if (ml != mr || nl != nr)
+		return matrix(0, 0);
+	matrix res(ml, nl);
+	for (int i = 0; i < ml; ++i)
+		for (int j = 0; j < nl; ++j)
+			res(i, j) = l(i, j) - r(i, j);
+	return res;
+}
+matrix operator+(matrix& l, matrix& r)
+{
+	int ml, nl, mr, nr;
+	l.getDimens(ml, nl);
+	r.getDimens(mr, nr);
+
+	if (ml != mr || nl != nr)
+		return matrix(0, 0);
+	matrix res(ml, nl);
+	for (int i = 0; i < ml; ++i)
+		for (int j = 0; j < nl; ++j)
+			res(i, j) = l(i, j) + r(i, j);
 	return res;
 }
