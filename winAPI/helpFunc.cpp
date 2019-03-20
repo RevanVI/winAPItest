@@ -30,8 +30,17 @@ bool drawPol2Dim(HDC hdc, matrix fig, COLORREF color, coordDescr d)
 	int m, n;
 	fig.getDimens(m, n);
 	for (int i = 0; i < m - 1; ++i)
-		drawLine(hdc, fig(i, 0) * d.cx + d.x0, -fig(i, 1) * d.cy + d.y0, fig(i + 1, 0) * d.cx + d.x0, -fig(i + 1, 1) * d.cy + d.y0);
-	drawLine(hdc, fig(m - 1, 0) * d.cx + d.x0, -fig(m - 1, 1) * d.cy + d.y0, fig(0, 0) * d.cx + d.x0, -fig(0, 1) * d.cy + d.y0);
+		drawLine(hdc, fig(i, 0), fig(i, 1), fig(i + 1, 0), fig(i + 1, 1), d);
+	//drawLine(hdc, fig(m - 1, 0) * d.cx + d.x0, -fig(m - 1, 1) * d.cy + d.y0, fig(0, 0) * d.cx + d.x0, -fig(0, 1) * d.cy + d.y0);
+	return true;
+}
+
+bool drawPol3Dim(HDC hdc, matrix fig, COLORREF color, coordDescr d)
+{
+	int m, n;
+	fig.getDimens(m, n);
+	for (int i = 0; i < m - 1; ++i)
+		drawLine(hdc, fig(i, 0), fig(i, 1), fig(i + 1, 0), fig(i + 1, 1), d);
 	return true;
 }
 
@@ -166,7 +175,16 @@ void create3DGrid(HDC hdc, coordDescr d, bool mode)
 	}
 }
 
-
+matrix findCenter(matrix l, matrix r)
+{
+	int m, n;
+	l.getDimens(m, n);
+	matrix res(m, n);
+	for (int i = 0; i < n - 1; ++i)
+		res(0, i) = (l(0, i) + r(0, i)) / 2;
+	res(0, n - 1) = 1;
+	return res;
+}
 
 matrix rotateFig(matrix fig, matrix axis, double angle)
 {
@@ -314,6 +332,53 @@ matrix chordAppr(matrix points)
 	}
 	return res;
 }
+matrix* calculatePoints(matrix& p0)
+{
+	int m, n;
+	p0.getDimens(m, n);
+
+	int pos = 0;
+	if (m % 2 != 0)
+		pos = m + 1;
+	else
+		pos = m;
+	matrix* p = new matrix(4 + (pos - 4) * 1.5, n);
+
+	matrix centerPoint(1, n);
+	int k = 0;
+	pos = 0;
+	while (k < m - 1)
+	{
+		if (k == 0)
+		{
+			for (int j = 0; j < n; ++j)
+				(*p)(pos, j) = p0(0, j);
+			++pos;
+		}
+
+		for (int i = 1; i < 3; ++i, ++pos)
+			for (int j = 0; j < n; ++j)
+				(*p)(pos, j) = p0(k + i, j);
+
+		if ((m - 1) - (k + 2) >= 2) //останетс€ не менее 2х точек
+		{
+			k += 2;
+			centerPoint = findCenter(p0.getStr(k), p0.getStr(k + 1));
+			for (int j = 0; j < n; ++j)
+				(*p)(pos, j) = centerPoint(0, j);
+			++pos;
+		}
+		else //if ((k + 2 == m - 1) || ((m - 1) - (k + 2) == 1)) //k + 2 - последн€€ точка  либо k + 3 - последн€€ точка
+		{
+			k = m - 1;
+			for (int j = 0; j < n; ++j)
+				(*p)(pos, j) = p0(k, j);
+			++pos;
+		}
+	}
+	return p;
+}
+
 
 //Matrix operations
 
@@ -355,6 +420,29 @@ double matrix::getElem(int i, int j) const
 	return coef[i][j];
 }
 
+matrix matrix::subMatrix(int str, int c)
+{
+	if (str + c > m)
+		return matrix(0, 0);
+	matrix res(c, n);
+	for (int i = str, strPos = 0; i < (str + c); ++i, ++strPos)
+		for (int j = 0; j < n; ++j)
+			res(strPos, j) = coef[i][j];
+	return res;
+}
+
+matrix matrix::toDefCoords()
+{
+	matrix res(m, n + 1);
+	for (int i = 0; i < m; ++i)
+	{
+		for (int j = 0; j < n; ++j)
+			res(i, j) = coef[i][j];
+		res(i, n) = 1;
+	}
+	return res;
+}
+
 double& matrix::operator()(int i, int j)
 {
 	return coef[i][j];
@@ -364,6 +452,14 @@ matrix& matrix::operator=(const matrix & obj)
 {
 	if (this == &obj)
 		return *this;
+
+	for (int i = 0; i < m; ++i)
+		delete coef[i];
+	delete coef;
+	obj.getDimens(m, n);
+	coef = new double*[m];
+	for (int i = 0; i < m; ++i)
+		coef[i] = new double[n];
 	for (int i = 0; i < m; ++i)
 		for (int j = 0; j < n; ++j)
 			coef[i][j] = obj.getElem(i, j);
@@ -386,6 +482,7 @@ matrix operator*(const matrix& left, const matrix& right)
 			for (int j = 0; j < nL; ++j)
 				res(i, strPos) += left.getElem(i, j) * right.getElem(j, strPos);
 	}
+
 	return res;
 }
 

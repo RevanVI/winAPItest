@@ -18,7 +18,7 @@ public:
 	~matrix();
 	void getDimens(int& m, int& n) const;
 	double getElem(int i, int j) const;
-
+	matrix subMatrix(int str, int c);
 	matrix getStr(int m);
 	void round(int prec);
 	matrix reverse();
@@ -26,6 +26,7 @@ public:
 	matrix strikeout(int m, int n);
 	void transport();
 	void fill(double val);
+	matrix toDefCoords();
 
 	double& operator()(int, int);
 	matrix& operator=(const matrix& obj);
@@ -38,8 +39,11 @@ public:
 bool drawLine(HDC hdc, double x0, double y0, double x, double y, coordDescr d);
 bool drawLine(HDC hdc, int x0, int y0, int x, int y);
 bool drawPol2Dim(HDC hdc, matrix fig, COLORREF color, coordDescr descr);
+bool drawPol3Dim(HDC hdc, matrix fig, COLORREF color, coordDescr descr);
 bool drawBrickDim(HDC hdc, matrix fig, coordDescr d, COLORREF color);
 matrix rotateFig(matrix fig, matrix axis, double angle);
 void create2DGrid(HDC hdc, coordDescr d);
 void create3DGrid(HDC hdc, coordDescr d, bool mode); // mode = true - isometric, mode = false - dim
 matrix chordAppr(matrix points);
+matrix findCenter(matrix l, matrix r);
+matrix* calculatePoints(matrix& p0); //рассчитывает точки для построения составной кривой Безье 4-го порядка
