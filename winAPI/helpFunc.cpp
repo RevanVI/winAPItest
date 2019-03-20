@@ -39,8 +39,12 @@ bool drawPol3Dim(HDC hdc, matrix fig, COLORREF color, coordDescr d)
 {
 	int m, n;
 	fig.getDimens(m, n);
+	HPEN newPen = CreatePen(PS_SOLID, 1, color);
+	HPEN oldPen = (HPEN)SelectObject(hdc, newPen);
 	for (int i = 0; i < m - 1; ++i)
 		drawLine(hdc, fig(i, 0), fig(i, 1), fig(i + 1, 0), fig(i + 1, 1), d);
+	SelectObject(hdc, oldPen);
+	DeleteObject(newPen);
 	return true;
 }
 
@@ -332,49 +336,49 @@ matrix chordAppr(matrix points)
 	}
 	return res;
 }
-matrix* calculatePoints(matrix& p0)
+matrix* calculatePoints(matrix& p0, int& num)
 {
 	int m, n;
 	p0.getDimens(m, n);
-
-	int pos = 0;
 	if (m % 2 != 0)
-		pos = m + 1;
+		num = m + 1;
 	else
-		pos = m;
-	matrix* p = new matrix(4 + (pos - 4) * 1.5, n);
+		num = m;
+	num = num / 2 - 1;
+	matrix* p = new matrix[num];
+	for (int i = 0; i < num; ++i)
+		p[i] = matrix(4, n);
 
 	matrix centerPoint(1, n);
 	int k = 0;
-	pos = 0;
+	int pos = 0;
 	while (k < m - 1)
 	{
 		if (k == 0)
-		{
 			for (int j = 0; j < n; ++j)
-				(*p)(pos, j) = p0(0, j);
-			++pos;
-		}
+				p[pos](0, j) = p0(0, j);
+		else
+			for (int j = 0; j < n; ++j)
+				p[pos](0, j) = centerPoint(0, j);
 
-		for (int i = 1; i < 3; ++i, ++pos)
+		for (int i = 1; i < 3; ++i)
 			for (int j = 0; j < n; ++j)
-				(*p)(pos, j) = p0(k + i, j);
+				p[pos](i, j) = p0(k + i, j);
 
 		if ((m - 1) - (k + 2) >= 2) //останетс€ не менее 2х точек
 		{
 			k += 2;
 			centerPoint = findCenter(p0.getStr(k), p0.getStr(k + 1));
 			for (int j = 0; j < n; ++j)
-				(*p)(pos, j) = centerPoint(0, j);
-			++pos;
+				p[pos](3, j) = centerPoint(0, j);
 		}
 		else //if ((k + 2 == m - 1) || ((m - 1) - (k + 2) == 1)) //k + 2 - последн€€ точка  либо k + 3 - последн€€ точка
 		{
 			k = m - 1;
 			for (int j = 0; j < n; ++j)
-				(*p)(pos, j) = p0(k, j);
-			++pos;
+				p[pos](3, j) = p0(k, j);
 		}
+		++pos;
 	}
 	return p;
 }

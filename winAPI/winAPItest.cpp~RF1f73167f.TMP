@@ -151,6 +151,12 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	static int m = 4;
 	static int n = 4;
 	static matrix p0(m, n); //изначальные точки
+	p0(0, 0) = 0; p0(0, 1) = 0; p0(0, 2) = 0; p0(0, 3) = 1;
+	p0(1, 0) = 1; p0(1, 1) = 2; p0(1, 2) = 0; p0(1, 3) = 1;
+	p0(2, 0) = 3; p0(2, 1) = 2; p0(2, 2) = 0; p0(2, 3) = 1;
+	p0(3, 0) = 2; p0(3, 1) = 0; p0(3, 2) = 0; p0(3, 3) = 1;
+	//p0(4, 0) = 4; p0(4, 1) = 2; p0(4, 2) = 0;
+	//p0(5, 0) = 12; p0(5, 1) = 0;
 	static matrix* p;
 	static int num = 0;
 	static matrix* J;
@@ -169,13 +175,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		d.cy = 40;
 		d.cx = 40;
 		d.cz = 40;
-
-		p0(0, 0) = 0; p0(0, 1) = 0; p0(0, 2) = 0; p0(0, 3) = 1;
-		p0(1, 0) = 1; p0(1, 1) = 2; p0(1, 2) = 0; p0(1, 3) = 1;
-		p0(2, 0) = 3; p0(2, 1) = 2; p0(2, 2) = 0; p0(2, 3) = 1;
-		p0(3, 0) = 2; p0(3, 1) = 0; p0(3, 2) = 0; p0(3, 3) = 1;
-		//p0(4, 0) = 4; p0(4, 1) = 2; p0(4, 2) = 0;
-		//p0(5, 0) = 12; p0(5, 1) = 0;
 
 		p = calculatePoints(p0, num);
 		double dt = 1 / (m * 4.0);
@@ -349,17 +348,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				r.right = d.r;
 				r.left = d.l;
 				RedrawWindow(hWnd, &r, NULL, RDW_ERASE | RDW_INVALIDATE);
-			}
-			break;
-			case WM_LBUTTONDOWN:
-			{
-				int x = LOWORD(lParam);
-				int y = HIWORD(lParam);
-
-				if ((x > d.l) && (x < d.r) && (y < d.b) && (y > d.t))
-				{
-					int pNum = definePoint(p0, x, y);
-				}
 			}
 			break;
 			/*
@@ -556,6 +544,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		{
 			for (int i = 0; i < num; ++i)
 				p[i] = rotateFig(p[i], axis, angle);
+
 			p0 = rotateFig(p0, axis, angle);
 		}
 		
@@ -566,16 +555,19 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			drawPol3Dim(hdc, draw, RGB(0, 0, 0), d);
 		}
 		matrix draw = p0 * dim;
-		drawPol3Dim(hdc, draw, RGB(120, 120, 120), d);
+		drawPol3Dim(hdc, draw, RGB(120, 120, 0), d);
+
 		EndPaint(hWnd, &ps);
 		viewChange = false;
 		/*
+
 			double dArr[8][4];
 			for (int i = 0; i < 8; ++i)
 			{
 				for (int j = 0; j < 4; ++j)
 					dArr[i][j] = fig1(i, j);
 			}
+
 			//занесение изменненных координат в интерфейс
 			int prec = 2;
 			int len = 5;

@@ -46,4 +46,6 @@ void create2DGrid(HDC hdc, coordDescr d);
 void create3DGrid(HDC hdc, coordDescr d, bool mode); // mode = true - isometric, mode = false - dim
 matrix chordAppr(matrix points);
 matrix findCenter(matrix l, matrix r);
-matrix* calculatePoints(matrix& p0); //рассчитывает точки для построения составной кривой Безье 4-го порядка
+matrix* calculatePoints(matrix& p0, int& num); //рассчитывает точки для построения составной кривой Безье 4-го порядка
+
+int definePoint(matrix& p0);
