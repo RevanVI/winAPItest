@@ -631,3 +631,35 @@ matrix operator+(matrix& l, matrix& r)
 			res(i, j) = l(i, j) + r(i, j);
 	return res;
 }
+
+int definePoint(matrix& p0, int x, int y, bool mode, coordDescr d)
+{
+	matrix dim(4, 4);
+	if (mode)
+	{
+		dim(0, 0) = 0.707;  dim(0, 1) = -0.408;  dim(0, 2) = 0; dim(0, 3) = 0;
+		dim(1, 0) = 0;      dim(1, 1) = 0.816;   dim(1, 2) = 0; dim(1, 3) = 0;
+		dim(2, 0) = -0.707; dim(2, 1) = -0.408;  dim(2, 2) = 0; dim(2, 3) = 0;
+		dim(3, 0) = 0;      dim(3, 1) = 0;       dim(3, 2) = 0; dim(3, 3) = 1;
+	}
+	else
+	{
+		dim(0, 0) = 0.925;  dim(0, 1) = -0.134;  dim(0, 2) = 0; dim(0, 3) = 0;
+		dim(1, 0) = 0;      dim(1, 1) = 0.935;   dim(1, 2) = 0; dim(1, 3) = 0;
+		dim(2, 0) = -0.378; dim(2, 1) = -0.327;  dim(2, 2) = 0; dim(2, 3) = 0;
+		dim(3, 0) = 0;      dim(3, 1) = 0;       dim(3, 2) = 0; dim(3, 3) = 1;
+	}
+	matrix cp0 = p0 * dim;
+	int s = 3;
+	int m, n;
+	p0.getDimens(m, n);
+	n = -1;
+	for (int i = 0; i < m; ++i)
+	{
+		int xp = cp0(i, 0) * d.cx + d.x0;
+		int yp = -cp0(i, 1) * d.cy + d.y0;
+		if ((x > (xp - s)) && (x < (xp  + s)) && (y > (yp - s)) && (y < (yp + s)))
+			n = i;
+	}
+	return n;
+}

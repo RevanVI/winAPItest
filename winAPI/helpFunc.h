@@ -48,4 +48,4 @@ matrix chordAppr(matrix points);
 matrix findCenter(matrix l, matrix r);
 matrix* calculatePoints(matrix& p0, int& num); //рассчитывает точки для построения составной кривой Безье 4-го порядка
 
-int definePoint(matrix& p0);
+int definePoint(matrix& p0, int x, int y, bool mode, coordDescr d);
