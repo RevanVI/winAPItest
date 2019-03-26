@@ -130,10 +130,10 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		axLbl2, xaEdit2, yaEdit2, zaEdit2,
 		but1;
 	static HWND pLbl0;
-	static HWND pLbl[11];
-	static HWND pxEdit[11];
-	static HWND pyEdit[11];
-	static HWND pzEdit[11];
+	static HWND pLbl[16];
+	static HWND pxEdit[16];
+	static HWND pyEdit[16];
+	static HWND pzEdit[16];
 
 	static bool mode;
 	static bool viewChange;
@@ -144,15 +144,15 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	int minC = 10, maxC = 60, defC = 40;
 	double minPos = 0.25, maxPos = 0.75, defPos = 0.5;
 
-	static int m = 4;
-	static int n = 16;
-	static matrix p0(m, n); //изначальные точки
-	static matrix** p;
-	static int num = 0;
+	static int m = 16;
+	//static int n = 16;
+	static matrix p0[4]; //изначальные точк
+	//static matrix** p;
+	//static int num = 0;
 	static matrix J(4, 4);
 	static matrix axis(2, 4); //ось поворота
 	static double angle; //угол поворота
-	static int pNum;
+	static int pNum, iNum;
 	static bool isLBDown, isRBDown;
 	switch (message)
 	{
@@ -165,65 +165,43 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		viewChange = false;
 		pointChange = true;
 		isLBDown = isRBDown = false;
-
-		pNum = -1;
-
+		pNum = iNum = -1;
 		d.cy = 40;
 		d.cx = 40;
 		d.cz = 40;
 
+		p0[0](0, 0) = -3;		p0[0](0, 1) = 0;		p0[0](0, 2) = 3;		p0[0](0, 3) = 1;
+		p0[0](1, 0) = -1;		p0[0](1, 1) = 1;		p0[0](1, 2) = 3;		p0[0](1, 3) = 1;
+		p0[0](2, 0) = 1;		p0[0](2, 1) = 1;		p0[0](2, 2) = 3;		p0[0](2, 3) = 1;
+		p0[0](3, 0) = 3;		p0[0](3, 1) = 0;		p0[0](3, 2) = 3;		p0[0](3, 3) = 1;
 
-		p0(0, 0) = -3;		p0(0, 1) = 0;		p0(0, 2) = 3;		p0(0, 3) = 1;
-		p0(1, 0) = -1;		p0(1, 1) = 1;		p0(1, 2) = 3;		p0(1, 3) = 1;
-		p0(2, 0) = 1;		p0(2, 1) = 1;		p0(2, 2) = 3;		p0(2, 3) = 1;
-		p0(3, 0) = 3;		p0(3, 1) = 0;		p0(3, 2) = 3;		p0(3, 3) = 1;
+		p0[1](0, 0) = -3;		p0[1](0, 1) = 1;		p0[1](0, 2) = 1;		p0[1](0, 3) = 1;
+		p0[1](1, 0) = -1;		p0[1](1, 1) = 1;		p0[1](1, 2) = 1;		p0[1](1, 3) = 1;
+		p0[1](2, 0) = 1;		p0[1](2, 1) = 1;		p0[1](2, 2) = 1;		p0[1](2, 3) = 1;
+		p0[1](3, 0) = 3;		p0[1](3, 1) = 1;		p0[1](3, 2) = 1;		p0[1](3, 3) = 1;
 
-		p0(0, 4) = -3;		p0(0, 5) = 1;		p0(0, 6) = 1;		p0(0, 7) = 1;
-		p0(1, 4) = -1;		p0(1, 5) = 1;		p0(1, 6) = 1;		p0(1, 7) = 1;
-		p0(2, 4) = 1;		p0(2, 5) = 1;		p0(2, 6) = 1;		p0(2, 7) = 1;
-		p0(3, 4) = 3;		p0(3, 5) = 1;		p0(3, 6) = 1;		p0(3, 7) = 1;
+		p0[2](0, 0) = -3;		p0[2](0, 1) = 1;		p0[2](0, 2) = -1;		p0[2](0, 3) = 1;
+		p0[2](1, 0) = -1;		p0[2](1, 1) = 1;		p0[2](1, 2) = -1;		p0[2](1, 3) = 1;
+		p0[2](2, 0) = 1;		p0[2](2, 1) = 1;		p0[2](2, 2) = -1;		p0[2](2, 3) = 1;
+		p0[2](3, 0) = 3;		p0[2](3, 1) = 1;		p0[2](3, 2) = -1;		p0[2](3, 3) = 1;
 
-		p0(0, 8) = -3;		p0(0, 9) = 1;		p0(0, 10) = -1;		p0(0, 11) = 1;
-		p0(1, 8) = -1;		p0(1, 9) = 1;		p0(1, 10) = -1;		p0(1, 11) = 1;
-		p0(2, 8) = 1;		p0(2, 9) = 1;		p0(2, 10) = -1;		p0(2, 11) = 1;
-		p0(3, 8) = 3;		p0(3, 9) = 1;		p0(3, 10) = -1;		p0(3, 11) = 1;
+		p0[3](0, 0) = -3;		p0[3](0, 1) = 0;		p0[3](0, 2) = -3;		p0[3](0, 3) = 1;
+		p0[3](1, 0) = -1;		p0[3](1, 1) = 1;		p0[3](1, 2) = -3;		p0[3](1, 3) = 1;
+		p0[3](2, 0) = 1;		p0[3](2, 1) = 1;		p0[3](2, 2) = -3;		p0[3](2, 3) = 1;
+		p0[3](3, 0) = 3;		p0[3](3, 1) = 0;		p0[3](3, 2) = -3;		p0[3](3, 3) = 1;
 
-		p0(0, 12) = -3;		p0(0, 13) = 0;		p0(0, 14) = -3;		p0(0, 15) = 1;
-		p0(1, 12) = -1;		p0(1, 13) = 1;		p0(1, 14) = -3;		p0(1, 15) = 1;
-		p0(2, 12) = 1;		p0(2, 13) = 1;		p0(2, 14) = -3;		p0(2, 15) = 1;
-		p0(3, 12) = 3;		p0(3, 13) = 0;		p0(3, 14) = -3;		p0(3, 15) = 1;
-
-		p = new matrix*[4];
-		for (int i = 0; i < 4; ++i)
-			p[i] = new matrix[4];
-
-		double dt = 1 / (m * 4.0);
-		int jC = int(1 / dt);
-		double t = 0;
-		//J = new matrix(4, 4);
-		//J->fill(0);
 		J(0, 0) = -1;		J(0, 1) = 3;		J(0, 2) = -3;		J(0, 3) = 1;
 		J(1, 0) = 3;		J(1, 1) = -6;		J(1, 2) = 3;		J(1, 3) = 0;
 		J(2, 0) = -3;		J(2, 1) = 3;		J(2, 2) = 0;		J(2, 3) = 0;
 		J(3, 0) = 1;		J(3, 1) = 0;		J(3, 2) = 0;		J(3, 3) = 0;
-		/*
-		for (int i = 0; i < 4; ++i)
-		{
-			(*J)(i, 0) = pow((1 - t), 3);
-			(*J)(i, 1) = 3 * t * pow((1 - t), 2);
-			(*J)(i, 2) = 3 * t * t* (1 - t);
-			(*J)(i, 3) = t * t * t;
-			t += dt;
-			if (i + 1 == jC - 1)
-				t = 1;
-		}
-		*/
+
 		axis(0, 0) = 0; axis(0, 1) = 0; axis(0, 2) = 0; axis(0, 3) = 1;
 		axis(1, 0) = 0; axis(1, 1) = 10; axis(1, 2) = 0; axis(1, 3) = 1;
 		angle = 0 * PI / 180;
 
 		double y = 0.05 * rcWnd.bottom;
 		double x = 0.65 * rcWnd.right;
+		
 		titleLbl = CreateWindow(L"static", L"Настройки", WS_CHILD | WS_VISIBLE | SS_CENTER,
 			x, y, 0.3 * rcWnd.right, 0.025 * rcWnd.bottom, hWnd, NULL, hInst, NULL);
 		y += 0.025 * rcWnd.bottom + 0.01 * rcWnd.bottom;
@@ -301,26 +279,32 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		SetWindowLong(xaEdit2, GWL_WNDPROC, (LONG)EditWndProc);
 		SetWindowLong(yaEdit2, GWL_WNDPROC, (LONG)EditWndProc);
 		SetWindowLong(zaEdit2, GWL_WNDPROC, (LONG)EditWndProc);
-
+		
 		y += 0.04 * rcWnd.bottom + 0.02 * rcWnd.bottom;
 		pLbl0 = CreateWindow(L"static", L"Точки", WS_CHILD | WS_VISIBLE | SS_CENTER,
 			x, y, 0.3 * rcWnd.right, 0.025 * rcWnd.bottom, hWnd, NULL, hInst, NULL);
+
 		for (int i = 0; i < m; ++i)
 		{
-			y += 0.04 * rcWnd.bottom;
+			double bX = x;
+			if ((i + 1) % 2 == 0)
+				bX = x + 0.15 * rcWnd.right;
+			else
+				y += 0.04 * rcWnd.bottom;
 			wchar_t buffer[10];
 			wsprintfW(buffer, L"T%d", i + 1);
+			
 			pLbl[i] = CreateWindow(L"static", buffer, WS_CHILD | WS_VISIBLE | SS_LEFT,
-				x, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, NULL, hInst, NULL);
-			swprintf(buffer, L"%3.2f", p0(i, 0));
+				bX, y, 0.05 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, NULL, hInst, NULL);
+			swprintf(buffer, L"%3.2f", p0[i / 4](i % 4, 0));
 			pxEdit[i] = CreateWindow(L"edit", buffer, WS_CHILD | WS_VISIBLE | WS_BORDER,
-				x + 0.1 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)(6000 + i), hInst, NULL);
-			swprintf(buffer, L"%3.2f", p0(i, 1));
-			pyEdit[i] = CreateWindow(L"edit", L"0.00", WS_CHILD | WS_VISIBLE | WS_BORDER,
-				x + 0.13 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)(7000 + i), hInst, NULL);
-			swprintf(buffer, L"%3.2f", p0(i, 2));
-			pzEdit[i] = CreateWindow(L"edit", L"0.00", WS_CHILD | WS_VISIBLE | WS_BORDER,
-				x + 0.16 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)(8000 + i), hInst, NULL);
+				bX + 0.05 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)(6000 + i), hInst, NULL);
+			swprintf(buffer, L"%3.2f", p0[i / 4](i % 4, 1));
+			pyEdit[i] = CreateWindow(L"edit", buffer, WS_CHILD | WS_VISIBLE | WS_BORDER,
+				bX + 0.08 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)(7000 + i), hInst, NULL);
+			swprintf(buffer, L"%3.2f", p0[i / 4](i % 4, 2));
+			pzEdit[i] = CreateWindow(L"edit", buffer, WS_CHILD | WS_VISIBLE | WS_BORDER,
+				bX + 0.11 * rcWnd.right, y, 0.03 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)(8000 + i), hInst, NULL);
 			SendMessage(pxEdit[i], EM_LIMITTEXT, 5, 0);
 			SendMessage(pyEdit[i], EM_LIMITTEXT, 5, 0);
 			SendMessage(pzEdit[i], EM_LIMITTEXT, 5, 0);
@@ -328,23 +312,22 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			SetWindowLong(pyEdit[i], GWL_WNDPROC, (LONG)EditWndProc);
 			SetWindowLong(pzEdit[i], GWL_WNDPROC, (LONG)EditWndProc);
 		}
-
 		y += 0.05 * rcWnd.bottom;
 		but1 = CreateWindow(L"button", L"Выполнить", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 			x + 0.1 * rcWnd.right, y, 0.1 * rcWnd.right, 0.04 * rcWnd.bottom, hWnd, (HMENU)ID_BUT1, hInst, NULL);
 	}
 	break;
-	/*
 	case WM_COMMAND:
 	{
 		TCHAR buf[10];
 		int size;
-		switch (LOWORD(wParam))
-		{
-		case ID_MBUT1:
+		if (LOWORD(wParam) == ID_MBUT1 || LOWORD(wParam) == ID_MBUT2)
 		{
 			viewChange = true;
-			mode = true;
+			if (LOWORD(wParam) == ID_MBUT1)
+				mode = true;
+			else
+				mode = false;
 			RECT r;
 			r.bottom = d.b;
 			r.top = d.t;
@@ -352,22 +335,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			r.left = d.l;
 			RedrawWindow(hWnd, &r, NULL, RDW_ERASE | RDW_INVALIDATE);
 		}
-		break;
-		case ID_MBUT2:
-		{
-			viewChange = true;
-			mode = false;
-			RECT r;
-			r.bottom = d.b;
-			r.top = d.t;
-			r.right = d.r;
-			r.left = d.l;
-			RedrawWindow(hWnd, &r, NULL, RDW_ERASE | RDW_INVALIDATE);
-		}
-		break;
-		case ID_EDITCX:
-		case ID_EDITCY:
-		case ID_EDITCZ:
+		else if (LOWORD(wParam) >= ID_EDITCX && LOWORD(wParam) <= ID_EDITCZ)
 		{
 			HWND* edit;
 			if (HIWORD(wParam) == EN_KILLFOCUS)
@@ -391,9 +359,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				}
 			}
 		}
-		break;
-		case ID_EDITX:
-		case ID_EDITY:
+		else if (LOWORD(wParam) == ID_EDITX || LOWORD(wParam) == ID_EDITY)
 		{
 			HWND* edit;
 			if (HIWORD(wParam) == EN_KILLFOCUS)
@@ -416,40 +382,9 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				}
 			}
 		}
-		break;
-		case 6000:
-		case 6001:
-		case 6002:
-		case 6003:
-		case 6004:
-		case 6005:
-		case 6006:
-		case 6007:
-		case 6008:
-		case 6009:
-		case 6010:
-		case 7000:
-		case 7001:
-		case 7002:
-		case 7003:
-		case 7004:
-		case 7005:
-		case 7006:
-		case 7007:
-		case 7008:
-		case 7009:
-		case 7010:
-		case 8000:
-		case 8001:
-		case 8002:
-		case 8003:
-		case 8004:
-		case 8005:
-		case 8006:
-		case 8007:
-		case 8008:
-		case 8009:
-		case 8010:
+		else if ((LOWORD(wParam) >= 6000 && LOWORD(wParam) <= 6015) ||
+				 (LOWORD(wParam) >= 7000 && LOWORD(wParam) <= 7015) ||
+				 (LOWORD(wParam) >= 8000 && LOWORD(wParam) <= 8015))
 		{
 			HWND* edit;
 			if (HIWORD(wParam) == EN_KILLFOCUS)
@@ -472,13 +407,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				}
 			}
 		}
-		break;
-		case ID_EDITXA1:
-		case ID_EDITXA2:
-		case ID_EDITYA1:
-		case ID_EDITYA2:
-		case ID_EDITZA1:
-		case ID_EDITZA2:
+		else if (LOWORD(wParam) >= ID_EDITXA1 && LOWORD(wParam) <= ID_EDITZA2)
 		{
 			HWND* edit;
 			if (HIWORD(wParam) == EN_KILLFOCUS)
@@ -505,8 +434,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				}
 			}
 		}
-		break;
-		case ID_BUT1:
+		else if (LOWORD(wParam) == ID_BUT1)
 		{
 			SendMessage(cxEdit, EM_GETLINE, 0, (LPARAM)buf);
 			d.cx = wcstol(buf, NULL, 10);
@@ -542,14 +470,12 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				for (int i = 0; i < m; ++i)
 				{
 					SendMessage(pxEdit[i], EM_GETLINE, 0, (LPARAM)buf);
-					p0(i, 0) = wcstod(buf, NULL);
+					p0[i / 4](i % 4, 0) = wcstod(buf, NULL);
 					SendMessage(pyEdit[i], EM_GETLINE, 0, (LPARAM)buf);
-					p0(i, 1) = wcstod(buf, NULL);
+					p0[i / 4](i % 4, 1) = wcstod(buf, NULL);
 					SendMessage(pzEdit[i], EM_GETLINE, 0, (LPARAM)buf);
-					p0(i, 2) = wcstod(buf, NULL);
+					p0[i / 4](i % 4, 2) = wcstod(buf, NULL);
 				}
-				delete[] p;
-				p = calculatePoints(p0, num);
 				pointChange = false;
 			}
 
@@ -560,8 +486,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			r.left = d.l;
 			RedrawWindow(hWnd, &r, NULL, RDW_ERASE | RDW_INVALIDATE);
 		}
-		break;
-		}
 	}
 	break;
 	case WM_LBUTTONDOWN:
@@ -570,11 +494,16 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		int y = HIWORD(lParam);
 
 		if ((x > d.l) && (x < d.r) && (y < d.b) && (y > d.t))
-		{
-			pNum = definePoint(p0, x, y, mode, d);
-			isLBDown = true;
-			pointChange = true;
-		}
+			for (int i = 0; i < 4 && pNum == -1; ++i)
+			{
+				pNum = definePoint(p0[i], x, y, mode, d);
+				if (pNum != -1)
+				{
+					iNum = i;
+					isLBDown = true;
+					pointChange = true;
+				}
+			}
 	}
 	break;
 	case WM_RBUTTONDOWN:
@@ -582,24 +511,32 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		int x = LOWORD(lParam);
 		int y = HIWORD(lParam);
 
-		if ((x > d.l) && (x < d.r) && (y < d.b) && (y > d.t))
+		for (int i = 0; i < 4 && pNum == -1; ++i)
 		{
-			pNum = definePoint(p0, x, y, mode, d);
-			isRBDown = true;
-			pointChange = true;
+			pNum = definePoint(p0[i], x, y, mode, d);
+			if (pNum != -1)
+			{
+				iNum = i;
+				isRBDown = true;
+				pointChange = true;
+			}
 		}
 	}
 	break;
 	case WM_LBUTTONUP:
 	{
 		isLBDown = false;
+		pointChange = false;
 		pNum = -1;
+		iNum = -1;
 	}
 	break;
 	case WM_RBUTTONUP:
 	{
 		isRBDown = false;
+		pointChange = false;
 		pNum = -1;
+		iNum = -1;
 	}
 	break;
 	case WM_MOUSEMOVE:
@@ -614,14 +551,14 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			double mp;
 			if (isLBDown)
 			{
-				edit = &pxEdit[pNum];
-				valEdit = &p0(pNum, 0);
+				edit = &pxEdit[iNum * 4 + pNum];
+				valEdit = &p0[iNum](pNum, 0);
 				mp = 1;
 			}
 			else
 			{
-				edit = &pzEdit[pNum];
-				valEdit = &p0(pNum, 2);
+				edit = &pzEdit[iNum * 4 + pNum];
+				valEdit = &p0[iNum](pNum, 2);
 				mp = -1;
 			}
 
@@ -639,11 +576,8 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 
 			val = round(Y * pow(10, prec)) / pow(10, prec);
 			str = to_wstring(val).substr(0, len);
-			SetWindowText(pyEdit[pNum], str.c_str());
-			p0(pNum, 1) = val;
-
-			delete[] p;
-			p = calculatePoints(p0, num);
+			SetWindowText(pyEdit[iNum * 4 + pNum], str.c_str());
+			p0[iNum](pNum, 1) = val;
 
 			RECT r;
 			r.bottom = d.b;
@@ -654,7 +588,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		}
 	}
 	break;
-	*/
 	case WM_PAINT:
 		{
 		PAINTSTRUCT ps;
@@ -684,66 +617,76 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		}
 
 		create3DGrid(hdc, d, mode);
-			//for (int i = 0; i < num; ++i)
-				//p[i] = rotateFig(p[i], axis, angle);
-			double du = 1 / (m * 4.0);
-			int uC = int(1 / du);
-			double u = 0.0;
-
-			double dw = 1 / (m * 4.0);
-			int wC = int(1 / dw);
-			double w = 0.0;
-			p0 = rotateFig(p0, axis, angle);
-
-			matrix oldDraw(wC, 4);
-			matrix draw(wC, 4);
-
-			matrix vU(1, 4);
-			matrix vW(4, 1);
-			for (int i = 0; i < uC; ++i)
-			{
-				//if (i != 0)
-				//	oldDraw = draw;
-				vU(0, 0) = pow(u, 3);
-				vU(0, 1) = pow(u, 2);
-				vU(0, 2) = pow(u, 1);
-				vU(0, 3) = 1;
-				for (int j = 0; j < wC; ++j)
-				{
-					vW(0, 1) = pow(w, 3);
-					vW(1, 1) = pow(w, 2);
-					vW(2, 1) = pow(w, 1);
-					vW(3, 1) = 1;
-					for (int coord = 0; coord < 3; ++coord)
-					{
-						matrix subMP(4, 4);
-						for (int k = 0; k < 4; ++k)
-							for (int l = 0; l < 4; ++l)
-								subMP(k, l) = p0(k, l * 4 + coord);
-						draw(j, coord) = (vU * J * subMP * J * vW)(0, 0);
-					}
-					draw(j, 3) = 1;
-					w += dw;
-					if (j + 1 == wC - 1)
-						w = 1;
-				}
-				draw = draw * dim;
-				drawPol3Dim(hdc, draw, RGB(0, 0, 0), d);
-				u += du;
-				if (i + 1 == uC - 1)
-					u = 1;
-			}
-		
-		/*
-		for (int i = 0; i < num; ++i)
+		if (!viewChange && !pointChange)
+			for (int i = 0; i < 4; ++i)
+				p0[i] = rotateFig(p0[i], axis, angle);
+		for (int i = 0; i < 4; ++i)
 		{
-			matrix draw = J * p[i];
+			matrix buf(4, 4);
+			for (int k = 0; k < 4; ++k)
+				for (int l = 0; l < 4; ++l)
+					buf(k, l) = p0[k](i, l);
+			buf = buf * dim;
+			drawPol3Dim(hdc, buf, RGB(34, 0, 255), d);
+			drawPol3Dim(hdc, p0[i]*dim, RGB(34, 0, 255), d);
+		}
+		double du = 0.1;
+		int uC = int(1 / du) + 1;
+		double u = 0.0;
+		double dw = 0.1;
+		int wC = int(1 / dw) + 1;
+		double w = 0.0;
+
+		matrix oldDraw(wC, 4);
+		matrix draw(wC, 4);
+		matrix vU(1, 4);
+		matrix vW(4, 1);
+		for (int i = 0; i < uC; ++i)
+		{
+			if (i != 0)
+				oldDraw = draw;
+			vU(0, 0) = pow(u, 3);
+			vU(0, 1) = pow(u, 2);
+			vU(0, 2) = pow(u, 1);
+			vU(0, 3) = 1;
+			for (int j = 0; j < wC; ++j)
+			{
+				matrix buf1 = vU * J;
+				vW(0, 0) = pow(w, 3);
+				vW(1, 0) = pow(w, 2);
+				vW(2, 0) = pow(w, 1);
+				vW(3, 0) = 1;
+				matrix buf2 = J * vW;
+				for (int coord = 0; coord < 3; ++coord)
+				{
+					matrix subMP(4, 4);
+					for (int k = 0; k < 4; ++k)
+						for (int l = 0; l < 4; ++l)
+						{
+							double arr[4][4];
+							for (int i = 0; i < 4; ++i)
+								for (int j = 0; j < 4; ++j)
+									arr[i][j] = p0[k](i, j);
+
+							subMP(l, k) = p0[k](l, coord);
+						}
+					draw(j, coord) = (buf1 * subMP * buf2)(0, 0);
+				}
+				draw(j, 3) = 1;
+				w += dw;
+				if (j + 1 == wC - 1)
+					w = 1;
+			}
 			draw = draw * dim;
 			drawPol3Dim(hdc, draw, RGB(0, 0, 0), d);
+			if (i != 0)
+				for (int j = 0; j < wC; ++j)
+					drawLine(hdc, draw(j, 0), draw(j, 1), oldDraw(j, 0), oldDraw(j, 1), d);
+			u += du;
+			w = 0;
+			if (i + 1 == uC - 1)
+				u = 1;
 		}
-		matrix draw = p0 * dim;
-		drawPol3Dim(hdc, draw, RGB(120, 120, 120), d);
-		*/
 		EndPaint(hWnd, &ps);
 		viewChange = false;
 
@@ -753,19 +696,19 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		double val;
 		for (int i = 0; i < m; ++i)
 		{
-			val = round(p0(i, 0) * pow(10, prec)) / pow(10, prec);
+			val = round(p0[i / 4](i % 4, 0) * pow(10, prec)) / pow(10, prec);
 			wstring str = to_wstring(val).substr(0, len);
 			SetWindowText(pxEdit[i], str.c_str());
 			
-			val = round(p0(i, 1) * pow(10, prec)) / pow(10, prec);
+			val = round(p0[i / 4](i % 4, 1) * pow(10, prec)) / pow(10, prec);
 			str = to_wstring(val).substr(0, len);
 			SetWindowText(pyEdit[i], str.c_str());
 			
-			val = round(p0(i, 2) * pow(10, prec)) / pow(10, prec);
+			val = round(p0[i / 4](i % 4, 2) * pow(10, prec)) / pow(10, prec);
 			str = to_wstring(val).substr(0, len);
 			SetWindowText(pzEdit[i], str.c_str());
 		}
-		}
+	}
 		break;
 	case WM_SIZE:
 	{
@@ -774,8 +717,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	}
 		break;
     case WM_DESTROY:
-		//delete J;
-		//delete[] p;
         PostQuitMessage(0);
         break;
     default:

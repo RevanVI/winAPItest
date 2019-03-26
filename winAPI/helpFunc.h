@@ -10,10 +10,10 @@ struct coordDescr
 class matrix
 {
 private:
-	double** coef;
+	double** coef = nullptr;
 	int m, n;
 public: 
-	matrix(int m = 2, int n = 2);
+	matrix(int m = 4, int n = 4);
 	matrix(const matrix& matr);
 	~matrix();
 	void getDimens(int& m, int& n) const;

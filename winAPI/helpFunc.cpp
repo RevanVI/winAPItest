@@ -397,6 +397,18 @@ matrix::matrix(int m, int n)
 
 matrix::matrix(const matrix& matr)
 {
+	if (coef != nullptr)
+	{
+		for (int i = 0; i < m; ++i)
+			if (n != 1)
+				delete[] coef[i];
+			else
+				delete coef[i];
+		if (m != 1)
+			delete[] coef;
+		else
+			delete coef;
+	}
 	matr.getDimens(m, n);
 	coef = new double*[m];
 	for (int i = 0; i < m; ++i)
@@ -409,8 +421,14 @@ matrix::matrix(const matrix& matr)
 matrix::~matrix()
 {
 	for (int i = 0; i < m; ++i)
-		delete coef[i];
-	delete coef;
+		if (n != 1)
+			delete[] coef[i];
+		else
+			delete coef[i];
+	if (m != 1)
+		delete[] coef;
+	else
+		delete coef;
 }
 
 void matrix::getDimens(int& m, int& n) const
@@ -458,8 +476,15 @@ matrix& matrix::operator=(const matrix & obj)
 		return *this;
 
 	for (int i = 0; i < m; ++i)
-		delete coef[i];
-	delete coef;
+		if (n != 1)
+			delete[] coef[i];
+		else
+			delete coef[i];
+	if (m != 1)
+		delete[] coef;
+	else
+		delete coef;
+
 	obj.getDimens(m, n);
 	coef = new double*[m];
 	for (int i = 0; i < m; ++i)
@@ -539,8 +564,6 @@ matrix matrix::reverse()
 			double val = temp_matr.determ() / det;
 			rev_matr(i, j) = pow(-1.0, i + j + 2) * roundTo(val, 3);
 		}
-
-
 	}
 	rev_matr.transport();
 	return rev_matr;
