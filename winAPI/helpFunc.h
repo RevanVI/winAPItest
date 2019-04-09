@@ -1,5 +1,7 @@
 #pragma once
 #include <Windows.h>
+#include <bitset>
+
 struct coordDescr
 {
 	int l, t, r, b; //Координаты границ области рисования
@@ -18,7 +20,7 @@ public:
 	~matrix();
 	void getDimens(int& m, int& n) const;
 	double getElem(int i, int j) const;
-	matrix subMatrix(int str, int c);
+	matrix subMatrix(int str, int c) const;
 	matrix getStr(int m);
 	void round(int prec);
 	matrix reverse();
@@ -38,7 +40,7 @@ public:
 
 bool drawLine(HDC hdc, double x0, double y0, double x, double y, coordDescr d);
 bool drawLine(HDC hdc, int x0, int y0, int x, int y);
-bool drawPol2Dim(HDC hdc, matrix fig, COLORREF color, coordDescr descr);
+bool drawPol2Dim(HDC hdc, matrix fig, COLORREF color, coordDescr descr, bool closed);
 bool drawPol3Dim(HDC hdc, matrix fig, COLORREF color, coordDescr descr);
 bool drawBrickDim(HDC hdc, matrix fig, coordDescr d, COLORREF color);
 matrix rotateFig(matrix fig, matrix axis, double angle);
@@ -49,3 +51,8 @@ matrix findCenter(matrix l, matrix r);
 matrix* calculatePoints(matrix& p0, int& num); //рассчитывает точки для построения составной кривой Безье 4-го порядка
 
 int definePoint(matrix& p0, int x, int y, bool mode, coordDescr d);
+int definePoint(matrix& p0, int x, int y, coordDescr d);
+
+std::bitset<4> defineCodes(const matrix& seg, const matrix& win);
+
+matrix defineVisibleSegment(const matrix& seg, const matrix& win);

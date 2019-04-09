@@ -25,13 +25,18 @@ bool drawLine(HDC hdc, int x0, int y0, int x, int y)
 	return LineTo(hdc, x, y);
 }
 
-bool drawPol2Dim(HDC hdc, matrix fig, COLORREF color, coordDescr d)
+bool drawPol2Dim(HDC hdc, matrix fig, COLORREF color, coordDescr d, bool closed)
 {
 	int m, n;
 	fig.getDimens(m, n);
+	HPEN newPen = CreatePen(PS_SOLID, 1, color);
+	HPEN oldPen = (HPEN)SelectObject(hdc, newPen);
 	for (int i = 0; i < m - 1; ++i)
 		drawLine(hdc, fig(i, 0), fig(i, 1), fig(i + 1, 0), fig(i + 1, 1), d);
-	//drawLine(hdc, fig(m - 1, 0) * d.cx + d.x0, -fig(m - 1, 1) * d.cy + d.y0, fig(0, 0) * d.cx + d.x0, -fig(0, 1) * d.cy + d.y0);
+	if (closed)
+		drawLine(hdc, fig(m - 1, 0) * d.cx + d.x0, -fig(m - 1, 1) * d.cy + d.y0, fig(0, 0) * d.cx + d.x0, -fig(0, 1) * d.cy + d.y0);
+	SelectObject(hdc, oldPen);
+	DeleteObject(newPen);
 	return true;
 }
 
@@ -424,7 +429,7 @@ double matrix::getElem(int i, int j) const
 	return coef[i][j];
 }
 
-matrix matrix::subMatrix(int str, int c)
+matrix matrix::subMatrix(int str, int c) const
 {
 	if (str + c > m)
 		return matrix(0, 0);
@@ -662,4 +667,89 @@ int definePoint(matrix& p0, int x, int y, bool mode, coordDescr d)
 			n = i;
 	}
 	return n;
+}
+
+int definePoint(matrix& p0, int x, int y, coordDescr d)
+{
+	int s = 3;
+	int m, n;
+	p0.getDimens(m, n);
+	n = -1;
+	for (int i = 0; i < m; ++i)
+	{
+		int xp = p0(i, 0) * d.cx + d.x0;
+		int yp = -p0(i, 1) * d.cy + d.y0;
+		if ((x >(xp - s)) && (x < (xp + s)) && (y >(yp - s)) && (y < (yp + s)))
+			n = i;
+	}
+	return n;
+}
+
+std::bitset<4> defineCodes(const matrix& seg, const matrix& win)
+{
+	std::bitset<4> code;
+	for (int i = 0; i < 4; ++i)
+		code[i] = 0;
+	if (seg.getElem(0, 0) < win.getElem(0, 0)) //left
+		code[0] = 1;
+	if (seg.getElem(0, 0) > win.getElem(1, 0)) //right
+		code[1] = 1;
+	if (seg.getElem(0, 1) < win.getElem(3, 1)) //bottom
+		code[2] = 1;
+	if (seg.getElem(0, 1) > win.getElem(0, 1)) //top
+		code[3] = 1;
+	return code;
+}
+
+matrix defineVisibleSegment(const matrix& seg, const matrix& win)
+{
+	int pNum = 0;
+	matrix visSeg = seg;
+	matrix ps = seg.subMatrix(0, 1);
+	matrix pe = seg.subMatrix(1, 1);
+	std::bitset<4> cps = defineCodes(ps, win);
+	std::bitset<4> cpe = defineCodes(pe, win);
+	if ((cps == 0) && (cpe == 0))
+		return visSeg;
+	while ((cps != 0) || (cpe != 0))
+	{
+		if ((cps & cpe) != 0)
+		{
+			visSeg = matrix(0, 0);
+			return visSeg;
+		}
+
+		if (cps == 0)
+		{
+			++pNum;
+			pe = ps;
+			ps = seg.subMatrix(1, 1);
+			std::bitset<4> buf = cps;
+			cps = cpe;
+			cpe = buf;
+		}
+
+		if (cps[0] != 0 || cps[1] != 0)
+		{
+			if (cps[0] != 0) //left
+				visSeg(pNum, 0) = win.getElem(0, 0);
+			else			 //right
+				visSeg(pNum, 0) = win.getElem(1, 0);
+			double t = (visSeg(pNum, 0) - ps(0, 0)) / (pe(0, 0) - ps(0, 0));
+			visSeg(pNum, 1) = ps(0, 1) + (pe(0, 1) - ps(0, 1)) * t;
+		}
+		else if (cps[2] != 0 || cps[3] != 0)
+		{
+			if (cps[2] != 0) //bottom
+				visSeg(pNum, 1) = win.getElem(3, 1);
+			else			 //top
+				visSeg(pNum, 1) = win.getElem(0, 1);
+			double t = (visSeg(pNum, 1) - ps(0, 1)) / (pe(0, 1) - ps(0, 1));
+			visSeg(pNum, 0) = ps(0, 0) + (pe(0, 0) - ps(0, 0)) * t;
+		}
+		ps(0, 0) = visSeg(pNum, 0);
+		ps(0, 1) = visSeg(pNum, 1);
+		cps = defineCodes(ps, win);
+	}
+	return visSeg;
 }
