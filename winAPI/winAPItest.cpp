@@ -114,15 +114,20 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		coordLbl, xEdit, yEdit, 
 		but1;
 
+
 	static double x0mod, y0mod;
 	static coordDescr d;
 
 	int minC = 10, maxC = 60, defC = 40;
 	double minPos = 0.25, maxPos = 0.75, defPos = 0.5;
 
-	static matrix win(4, 2); //win coords
-	static vector<matrix> p; //vector of segments
-	static matrix newPoint;
+	static matrix fig(8, 4);
+	static vector<vector<int> > edges(6);
+	for (size_t i = 0; i < 6; ++i)
+		edges[i].resize(4);
+	static matrix planes(4, 6);
+	static vector<int> visibleEdges;
+	static matrix testPoint (1, 4);
 	static int pNum, iNum;
 	static bool isLBDown, isLBDblClk;
 	switch (message)
@@ -137,11 +142,36 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		d.cy = 40;
 		d.cx = 40;
 		d.cz = 40;
-		win(0, 0) = 1;		win(0, 1) = 5;
-		win(1, 0) = 5;		win(1, 1) = 5;
-		win(2, 0) = 5;		win(2, 1) = 1;
-		win(3, 0) = 1;		win(3, 1) = 1;
-		newPoint = matrix(2, 2);
+
+
+		fig(0, 0) = -0.5;					fig(0, 1) = -0.5;					fig(0, 2) = -0.5;				 fig(0, 3) = 1;
+		fig(6, 0) = 0.5;					fig(6, 1) = 0.5;					fig(6, 2) = 0.5;				 fig(6, 3) = 1;
+
+		fig(1, 0) = fig(6, 0);			fig(1, 1) = fig(0, 1);			fig(1, 2) = fig(0, 2);		 fig(1, 3) = 1;
+		fig(2, 0) = fig(6, 0);			fig(2, 1) = fig(0, 1);			fig(2, 2) = fig(6, 2);		 fig(2, 3) = 1;
+		fig(3, 0) = fig(0, 0);			fig(3, 1) = fig(0, 1);			fig(3, 2) = fig(6, 0);		 fig(3, 3) = 1;
+		fig(4, 0) = fig(0, 0);			fig(4, 1) = fig(6, 1);		    fig(4, 2) = fig(0, 2);		 fig(4, 3) = 1;
+		fig(5, 0) = fig(6, 0);			fig(5, 1) = fig(6, 1);			fig(5, 2) = fig(0, 2);		 fig(5, 3) = 1;
+		fig(7, 0) = fig(0, 0);			fig(7, 1) = fig(6, 1);			fig(7, 2) = fig(6, 2);		 fig(7, 3) = 1;
+		/*
+		fig(0, 0) = 0;					fig(0, 1) = 0;					fig(0, 2) = 0;				 fig(0, 3) = 1;
+		fig(6, 0) = 4;					fig(6, 1) = 4;					fig(6, 2) = 4;				 fig(6, 3) = 1;
+
+		fig(1, 0) = fig(6, 0);			fig(1, 1) = fig(0, 1);			fig(1, 2) = fig(0, 2);		 fig(1, 3) = 1;
+		fig(2, 0) = fig(6, 0);			fig(2, 1) = fig(0, 1);			fig(2, 2) = fig(6, 2);		 fig(2, 3) = 1;
+		fig(3, 0) = fig(0, 0);			fig(3, 1) = fig(0, 1);			fig(3, 2) = fig(6, 0);		 fig(3, 3) = 1;
+		fig(4, 0) = fig(0, 0);			fig(4, 1) = fig(6, 1);		    fig(4, 2) = fig(0, 2);		 fig(4, 3) = 1;
+		fig(5, 0) = fig(6, 0);			fig(5, 1) = fig(6, 1);			fig(5, 2) = fig(0, 2);		 fig(5, 3) = 1;
+		fig(7, 0) = fig(0, 0);			fig(7, 1) = fig(6, 1);			fig(7, 2) = fig(6, 2);		 fig(7, 3) = 1;
+		*/
+		testPoint(0, 0) = 0;			testPoint(0, 1) = 0;			testPoint(0, 2) = -1;			testPoint(0, 3) = 0;
+		
+		edges[0][0] = 0;			edges[0][1] = 1;			edges[0][2] = 2;		 edges[0][3] = 3;
+		edges[1][0] = 2;			edges[1][1] = 3;			edges[1][2] = 7;		 edges[1][3] = 6;
+		edges[2][0] = 0;			edges[2][1] = 3;			edges[2][2] = 7;		 edges[2][3] = 4;
+		edges[3][0] = 0;			edges[3][1] = 4;		    edges[3][2] = 5;		 edges[3][3] = 1;
+		edges[4][0] = 1;			edges[4][1] = 2;			edges[4][2] = 6;		 edges[4][3] = 5;
+		edges[5][0] = 4;			edges[5][1] = 5;			edges[5][2] = 6;		 edges[5][3] = 7;
 
 		double y = 0.05 * rcWnd.bottom;
 		double x = 0.65 * rcWnd.right;
@@ -242,6 +272,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		}
 	}
 	break;
+	/*
 	case WM_LBUTTONDOWN:
 	{
 		int x = LOWORD(lParam);
@@ -346,6 +377,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		}
 	}
 	break;
+	*/
 	case WM_PAINT:
 		{
 		PAINTSTRUCT ps;
@@ -358,17 +390,67 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		d.x0 = (d.r - d.l) * x0mod + d.l;
 		d.y0 = (d.b - d.t) * y0mod + d.t;
 
-		create2DGrid(hdc, d);
-		drawPol2Dim(hdc, win, RGB(0, 0, 0), d, true);
-
-		for (int i = 0; i < p.size(); ++i)
+		visibleEdges.clear();
+		planes = calcBodyMatrix(fig, edges);
+		double dArr[4][6];
+		for (int i = 0; i < 4; ++i)
 		{
-			drawPol2Dim(hdc, p[i], RGB(0, 0, 0), d, false);
-			matrix visSeg = defineVisibleSegment(p[i], win);
-			int m, n;
-			visSeg.getDimens(m, n);
-			if (m != 0)
-				drawPol2Dim(hdc, visSeg, RGB(200, 0, 0), d, false);
+			for (int j = 0; j < 6; ++j)
+				dArr[i][j] = planes(i, j);
+		}
+
+		//changes
+		/*
+		{
+			matrix iso(4, 4);
+			iso(0, 0) = 1;  iso(0, 1) = 0;  iso(0, 2) = 0; iso(0, 3) = 0;
+			iso(1, 0) = 0;  iso(1, 1) = 0.86;  iso(1, 2) = 0.5; iso(1, 3) = 0;
+			iso(2, 0) = 0;  iso(2, 1) = -0.5;  iso(2, 2) = 0.86; iso(2, 3) = 0;
+			iso(3, 0) = 0;  iso(3, 1) = 0;  iso(3, 2) = 0; iso(3, 3) = 1;
+			fig = fig * iso;
+			planes = iso * planes;
+		}
+		{
+			matrix iso(4, 4);
+			iso(0, 0) = 0.7;  iso(0, 1) = 0;  iso(0, 2) = -0.7; iso(0, 3) = 0;
+			iso(1, 0) = 0;  iso(1, 1) = 1;  iso(1, 2) = 0; iso(1, 3) = 0;
+			iso(2, 0) = 0.7;  iso(2, 1) = 0;  iso(2, 2) = 0.7; iso(2, 3) = 0;
+			iso(3, 0) = 0;  iso(3, 1) = 0;  iso(3, 2) = 0; iso(3, 3) = 1;
+			fig = fig * iso;
+			planes = iso * planes;
+		}
+		*/
+		create2DGrid(hdc, d);
+		matrix figDraw(8, 4);
+		{
+			matrix iso(4, 4);
+			iso(0, 0) = 1;  iso(0, 1) = 0;  iso(0, 2) = 0; iso(0, 3) = 0;
+			iso(1, 0) = 0;  iso(1, 1) = 1;  iso(1, 2) = 0; iso(1, 3) = 0;
+			iso(2, 0) = 0;  iso(2, 1) = 0;  iso(2, 2) = 0; iso(2, 3) = 0;
+			iso(3, 0) = 0;  iso(3, 1) = 0;  iso(3, 2) = 0; iso(3, 3) = 1;
+			figDraw = fig * iso;
+			planes = iso * planes;
+		}
+		for (int i = 0; i < 4; ++i)
+		{
+			for (int j = 0; j < 6; ++j)
+				dArr[i][j] = planes(i, j);
+		}
+		//test fo visibility
+		matrix check = testPoint * planes;
+		for (int i = 0; i < 6; ++i)
+			if (check(0, i) > 0)
+				visibleEdges.push_back(i);
+
+		//print
+		for (int v = 0; v < visibleEdges.size(); ++v)
+		{
+			for (int p = 0; p < 4; ++p)
+			{
+				int fP = edges[v][p];
+				int sP = edges[v][(p + 1) % 4];
+				drawLine(hdc, figDraw(fP, 0), figDraw(fP, 1), figDraw(sP, 0), figDraw(sP, 1));
+			}
 		}
 		EndPaint(hWnd, &ps);
 		}

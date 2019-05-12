@@ -753,3 +753,50 @@ matrix defineVisibleSegment(const matrix& seg, const matrix& win)
 	}
 	return visSeg;
 }
+
+matrix calcBodyMatrix(const matrix& fig, const std::vector<std::vector<int> >& edges)
+{
+	int m, n;
+	m = edges.size();
+	n = edges[0].size();
+	matrix planes(4, m);
+
+	for (int k = 0; k < m; ++k)//for all edges
+	{
+		double a, b, c, d;
+		a = b = c = d = 0;
+		for (int i = 0; i < 4; ++i)//through all dots
+		{
+			int e = edges[k][i]; //edge  num
+			int ne = edges[k][(i + 1) % 4];//next edge num
+			a += (fig.getElem(e, 1) - fig.getElem(ne, 1))*(fig.getElem(e, 2) + fig.getElem(ne, 2));
+			b += (fig.getElem(e, 2) - fig.getElem(ne, 2))*(fig.getElem(e, 0) + fig.getElem(ne, 0));
+			c += (fig.getElem(e, 0) - fig.getElem(ne, 0))*(fig.getElem(e, 1) + fig.getElem(ne, 1));
+		}
+		d = -(a * fig.getElem(edges[k][0], 0) + b * fig.getElem(edges[k][0], 1) + c * fig.getElem(edges[k][0], 2));
+		planes(0, k) = a;
+		planes(1, k) = b;
+		planes(2, k) = c;
+		planes(3, k) = d;
+	}
+
+	//check signs
+	matrix point(1, 4);
+	point.fill(0);
+	int m1, n1;
+	fig.getDimens(m1, n1);
+	for (int k = 0; k < 4; ++k)
+	{
+		for (int i = 0; i < m1; ++i)
+			point(0, k) += fig.getElem(i, k);
+		point(0, k) = point(0, k) / m1;
+	}
+	matrix check = point * planes;
+	for (int i = 0; i < m; ++i)
+	{
+		if (check(0, i) < 0)
+			for (int j = 0; j < 4; ++j)
+				planes(j, i) *= -1;
+	}
+	return planes;
+}
