@@ -1,5 +1,6 @@
 #pragma once
 #include <Windows.h>
+#include <vector>
 #include <bitset>
 
 struct coordDescr
@@ -56,3 +57,6 @@ int definePoint(matrix& p0, int x, int y, coordDescr d);
 std::bitset<4> defineCodes(const matrix& seg, const matrix& win);
 
 matrix defineVisibleSegment(const matrix& seg, const matrix& win);
+
+
+matrix calcBodyMatrix(const matrix& fig, const std::vector<std::vector<int>>& edges);
