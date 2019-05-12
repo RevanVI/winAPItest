@@ -70,14 +70,17 @@ bool drawBrickDim(HDC hdc, matrix fig, coordDescr d, COLORREF color)
 	return true;
 }
 
-
-void create2DGrid(HDC hdc, coordDescr d)
+void createFrame(HDC hdc, coordDescr d)
 {
 	drawLine(hdc, d.l, d.t, d.r, d.t);
 	drawLine(hdc, d.r, d.t, d.r, d.b);
 	drawLine(hdc, d.r, d.b, d.l, d.b);
 	drawLine(hdc, d.l, d.b, d.l, d.t);
+}
 
+void create2DGrid(HDC hdc, coordDescr d)
+{
+	createFrame(hdc, d);
 	HPEN hPen = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
 	HPEN oPen = (HPEN)SelectObject(hdc, hPen);
 	drawLine(hdc, d.l, d.y0, d.r, d.y0); //ось ќх

@@ -45,6 +45,7 @@ bool drawPol2Dim(HDC hdc, matrix fig, COLORREF color, coordDescr descr, bool clo
 bool drawPol3Dim(HDC hdc, matrix fig, COLORREF color, coordDescr descr);
 bool drawBrickDim(HDC hdc, matrix fig, coordDescr d, COLORREF color);
 matrix rotateFig(matrix fig, matrix axis, double angle);
+void createFrame(HDC hdc, coordDescr d);
 void create2DGrid(HDC hdc, coordDescr d);
 void create3DGrid(HDC hdc, coordDescr d, bool mode); // mode = true - isometric, mode = false - dim
 matrix chordAppr(matrix points);
